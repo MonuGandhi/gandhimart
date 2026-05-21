@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "name": "Fruits & Vegetables",
+    "slug": "fruits-vegetables",
+    "emoji": "🥬",
+    "color": "#E8F5E9",
+    "gradient": "from-green-100 to-green-50",
+    "productCount": 12
+  },
+  {
+    "id": 2,
+    "name": "Dairy & Breakfast",
+    "slug": "dairy-breakfast",
+    "emoji": "🥛",
+    "color": "#FFF3E0",
+    "gradient": "from-orange-100 to-orange-50",
+    "productCount": 10
+  },
+  {
+    "id": 3,
+    "name": "Snacks & Munchies",
+    "slug": "snacks-munchies",
+    "emoji": "🍿",
+    "color": "#FFF8E1",
+    "gradient": "from-yellow-100 to-yellow-50",
+    "productCount": 8
+  },
+  {
+    "id": 4,
+    "name": "Cold Drinks & Juices",
+    "slug": "cold-drinks-juices",
+    "emoji": "🥤",
+    "color": "#E3F2FD",
+    "gradient": "from-blue-100 to-blue-50",
+    "productCount": 8
+  },
+  {
+    "id": 5,
+    "name": "Instant & Frozen Food",
+    "slug": "instant-frozen-food",
+    "emoji": "🍜",
+    "color": "#FCE4EC",
+    "gradient": "from-pink-100 to-pink-50",
+    "productCount": 7
+  },
+  {
+    "id": 6,
+    "name": "Cleaning Essentials",
+    "slug": "cleaning-essentials",
+    "emoji": "🧹",
+    "color": "#E8EAF6",
+    "gradient": "from-indigo-100 to-indigo-50",
+    "productCount": 6
+  },
+  {
+    "id": 7,
+    "name": "Personal Care",
+    "slug": "personal-care",
+    "emoji": "🧴",
+    "color": "#F3E5F5",
+    "gradient": "from-purple-100 to-purple-50",
+    "productCount": 6
+  },
+  {
+    "id": 8,
+    "name": "Bakery & Biscuits",
+    "slug": "bakery-biscuits",
+    "emoji": "🍪",
+    "color": "#EFEBE9",
+    "gradient": "from-amber-100 to-amber-50",
+    "productCount": 7
+  }
+]

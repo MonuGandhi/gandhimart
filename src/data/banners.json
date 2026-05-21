@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "title": "Fresh Fruits & Veggies",
+    "subtitle": "Farm-fresh produce delivered to your doorstep",
+    "bgColor": "from-green-500 to-emerald-600",
+    "image": "/banners/banner1.png",
+    "badge": "FARM FRESH"
+  },
+  {
+    "id": 2,
+    "title": "Daily Essentials",
+    "subtitle": "Everything you need, in one place",
+    "bgColor": "from-orange-400 to-amber-500",
+    "image": "/banners/banner2.png",
+    "badge": "BEST PRICES"
+  },
+  {
+    "id": 3,
+    "title": "Super Fast Delivery",
+    "subtitle": "Get your groceries delivered in minutes",
+    "bgColor": "from-blue-500 to-indigo-600",
+    "image": "/banners/banner3.png",
+    "badge": "EXPRESS"
+  }
+]

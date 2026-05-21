@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "code": "SAVE10",
+    "type": "percentage",
+    "value": 10,
+    "minOrder": 199,
+    "maxDiscount": 100,
+    "description": "Get 10% off on orders above ₹199",
+    "validTill": "2026-12-31",
+    "isActive": true
+  },
+  {
+    "id": 2,
+    "code": "FIRST50",
+    "type": "flat",
+    "value": 50,
+    "minOrder": 0,
+    "maxDiscount": 50,
+    "description": "₹50 off on your first order",
+    "validTill": "2026-12-31",
+    "isActive": true
+  },
+  {
+    "id": 3,
+    "code": "FREESHIP",
+    "type": "delivery",
+    "value": 0,
+    "minOrder": 99,
+    "maxDiscount": 30,
+    "description": "Free delivery on orders above ₹99",
+    "validTill": "2026-12-31",
+    "isActive": true
+  },
+  {
+    "id": 4,
+    "code": "FLAT100",
+    "type": "flat",
+    "value": 100,
+    "minOrder": 500,
+    "maxDiscount": 100,
+    "description": "₹100 off on orders above ₹500",
+    "validTill": "2026-12-31",
+    "isActive": true
+  },
+  {
+    "id": 5,
+    "code": "FRESH20",
+    "type": "percentage",
+    "value": 20,
+    "minOrder": 149,
+    "maxDiscount": 80,
+    "description": "20% off on fruits & vegetables",
+    "validTill": "2026-12-31",
+    "isActive": true
+  }
+]

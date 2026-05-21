@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#1CA672" />
+    <meta name="description" content="G Mart - Get groceries delivered in 10 minutes. Fresh fruits, vegetables, dairy, snacks and more." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <title>G Mart - Grocery Delivery in 10 Minutes</title>
+    <!-- OneSignal Push Notifications -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      // Safe Initialization: Skip on localhost to avoid domain mismatch errors
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+          await OneSignal.init({
+            appId: "5d76f007-2e38-4843-ade6-55e034235a92",
+            serviceWorkerPath: "OneSignalSDKWorker.js",
+            serviceWorkerParam: { scope: "/" },
+            allowLocalhostAsSecureOrigin: true,
+            notifyButton: {
+              enable: false
+            },
+          });
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Capture PWA install prompt ASAP, before React loads -->
+    <script>
+      window.__pwaPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__pwaPrompt = e;
+        // Dispatch custom event so React can listen reactively
+        window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));
+      });
+    </script>
+    <div id="root">
+      <!-- Premium Splash Loading Shell (Shows before React loads) -->
+      <script>
+        if (sessionStorage.getItem('gmart_splash_seen')) {
+          // React logic will handle the rest, hide the hardcoded one immediately
+          document.write('<style>#initial-splash { display: none !important; }</style>');
+        }
+      </script>
+      <div id="initial-splash" style="position:fixed;inset:0;background-color:#0d1b15;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;overflow:hidden;font-family:\'Inter\',sans-serif;">
+        <style>
+          @keyframes fade-in { from { opacity:0; } to { opacity:1; } }
+          @keyframes float { 0%,100% { transform:translateY(0) rotate(0deg); } 50% { transform:translateY(-12px) rotate(1deg); } }
+          @keyframes orb-move { 0%,100% { transform: translate(0,0); } 33% { transform: translate(30px, -50px); } 66% { transform: translate(-20px, 40px); } }
+          @keyframes leaf-float { 0% { transform: translate(0,0) rotate(0deg); opacity:0; } 10% { opacity:0.3; } 90% { opacity:0.3; } 100% { transform: translate(100px, 100vh) rotate(360deg); opacity:0; } }
+          .mesh-orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:0.3; animation: orb-move 12s ease-in-out infinite; }
+          .leaf { position:absolute; width:24px; height:24px; pointer-events:none; opacity:0; animation: leaf-float 15s linear infinite; }
+          #initial-splash { animation: fade-in 0.8s ease-out forwards; }
+          .logo-box { animation: float 4s ease-in-out infinite; animation-delay: 1s; }
+        </style>
+        
+        <!-- Premium Mesh Background with Particles -->
+        <div style="position:absolute;inset:0;overflow:hidden;background:#05110c;">
+          <div class="mesh-orb" style="top:-10%;left:10%;width:300px;height:300px;background:#1CA672;"></div>
+          <div class="mesh-orb" style="bottom:10%;right:10%;width:400px;height:400px;background:#0a4d35;animation-delay:-5s;"></div>
+          
+          <div style="position:absolute;inset:0;background:radial-gradient(circle at center, transparent 0%, #05110c 90%);"></div>
+        </div>
+
+        <div style="position:relative; z-index:10; text-align:center; padding:0 24px;">
+          <div class="central-stage" style="margin-bottom:48px;">
+            <div class="logo-box" style="position:relative; width:120px; height:120px; background:linear-gradient(to bottom right, #1CA672, #0a4d35); border-radius:2.5rem; display:flex; align-items:center; justify-content:center; box-shadow:0 20px 50px rgba(28,166,114,0.3); border:1px solid rgba(255,255,255,0.1);">
+              <img src="/pwa-512x512.png" style="width:80%; height:80%; object-fit:contain; filter:drop-shadow(0 5px 15px rgba(255,255,255,0.4));" alt="G Mart">
+            </div>
+          </div>
+
+          <h1 class="ram-ram" style="font-size:48px; font-weight:900; letter-spacing:0.15em; color:white; margin:0; line-height:1;">RAM RAM</h1>
+          
+          <div style="display:flex; flex-direction:column; align-items:center; margin-top:20px; gap:24px;">
+            <div class="loading-bar" style="width:50px; height:3px; background:#1CA672; border-radius:999px;"></div>
+            <p class="welcome-text" style="font-size:16px; font-weight:700; color:white; max-width:260px; margin:0; line-height:1.4;">Aapka swagat hai aapke apne Mart mein</p>
+          </div>
+        </div>
+
+        <!-- Exact Bottom Status Bar from Screenshot -->
+        <div style="position:absolute; bottom:56px; width:100%; display:flex; justify-content:center; padding:0 32px;">
+          <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:999px; padding:12px 24px; display:flex; align-items:center; gap:12px; backdrop-filter:blur(10px);">
+            <div style="display:flex; gap:6px;">
+              <div style="width:6px; height:6px; border-radius:50%; background:#1CA672;"></div>
+              <div style="width:6px; height:6px; border-radius:50%; background:#1CA672;"></div>
+              <div style="width:6px; height:6px; border-radius:50%; background:#1CA672; opacity:0.4;"></div>
+            </div>
+            <span style="color:rgba(255,255,255,0.6); font-size:9px; font-weight:900; letter-spacing:0.25em; text-transform:uppercase;">Securing High-Quality Stock</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
