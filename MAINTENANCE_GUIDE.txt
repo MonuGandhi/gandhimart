@@ -1,0 +1,83 @@
+# GANDHIMART MAINTENANCE & SECURITY GUIDE
+
+Esteemed Admin, use these commands to keep your project secure, up-to-date, and running smoothly.
+
+---
+
+## 🛡️ 1. SECURITY & VULNERABILITY CHECK
+Run these to find and fix security bugs.
+
+* npm audit
+  Check for known security risks in your packages.
+
+* npm audit fix
+  Automatically fix minor security issues.
+
+* npm audit fix --force
+  Fix more complex security issues (may involve breaking changes).
+
+---
+
+## 🚀 2. PACKAGE UPDATES
+Keep your features and performance top-notch.
+
+* npm update
+  Update packages within their safe version ranges.
+
+* npx npm-check-updates
+  Check for all available updates (including major versions).
+
+* npx npm-check-updates -u
+  Update package.json to the absolute latest versions.
+
+* npm install --legacy-peer-deps
+  Install all packages (use --legacy-peer-deps to avoid version conflicts).
+
+---
+
+## 🧹 3. DEEP CLEAN & REFRESH
+Use these if you face strange build errors.
+
+* rd /s /q node_modules
+  (Windows) Deletes the entire node_modules folder.
+
+* del package-lock.json
+  Deletes the lock file to refresh dependencies.
+
+* npm cache clean --force
+  Clears the npm cache.
+
+* TIP: After cleaning, always run 'npm install --legacy-peer-deps'.
+
+---
+
+## 🔥 4. FIREBASE MANAGEMENT
+Control your database and hosting.
+
+* firebase login
+  Connect to your Firebase account.
+
+* firebase deploy --only firestore:rules
+  Deploy only your security rules.
+
+* firebase deploy
+  Deploy everything (Hosting, Rules, Functions) to live.
+
+---
+
+## 📋 5. USEFUL INFO
+Check versions and details.
+
+* npm list --depth=0
+  See all top-level installed packages.
+
+* npm info <package-name>
+  Get full details of any package (e.g., npm info react).
+
+---
+
+### NOTE ON OVERRIDES:
+In GandhiMart, we use "overrides" in package.json to force secure versions of nested packages (like uuid and serialize-javascript). Do not remove the "overrides" section from package.json unless you know what you're doing!
+
+---
+Stay Secure, Stay Premium! 🛡️✨
