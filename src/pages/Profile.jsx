@@ -128,14 +128,20 @@ export default function Profile() {
   }, [isLoggedIn, user]);
 
   const togglePush = async () => {
-    if (pushLoading) return; // Prevent double tap
+    if (pushLoading) return; 
+
+    // Sabse pehle phone / browser ki setting check karo
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'denied') {
+        toast.error('❌ Phone ne notifications Block kiye hain! Browser bar me Lock(🔒) icon par dabayein aur "Allow" karein.', { duration: 6000 });
+        return; // Agar blocked hai toh ghumna shuru hi mat karo
+      }
+    }
 
     setPushLoading(true);
-    
-    // Fallback if OneSignal hangs
     const safetyTimeout = setTimeout(() => {
       setPushLoading(false);
-    }, 4000); 
+    }, 5000); 
 
     if (typeof window !== 'undefined') {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -146,9 +152,13 @@ export default function Profile() {
             setIsPushEnabled(false);
             toast.success('🔕 Notifications band ho gayi');
           } else {
-            // Force Slidedown in OneSignal v16
-            await OneSignal.Slidedown.promptPush();
-            // Automatically handled by listener, but we ensure loading is stopped immediately
+            // Asli Native Android/iOS permission mangne ka code
+            if (Notification.permission !== 'granted') {
+               await OneSignal.Notifications.requestPermission();
+            }
+            
+            // Uske baad OneSignal ko start karne ka command
+            await OneSignal.User.PushSubscription.optIn();
           }
         } catch (err) {
           console.error('Push toggle error:', err);
