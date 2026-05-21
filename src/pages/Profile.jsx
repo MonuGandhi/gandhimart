@@ -140,22 +140,17 @@ export default function Profile() {
 
     setPushLoading(true);
     
-    // Safety Timeout: If OneSignal hangs for 8 seconds, stop loading
+    // Proper Safety Timeout: Will force-resolve the loading state
     const safetyTimeout = setTimeout(() => {
-      if (pushLoading) {
-        setPushLoading(false);
-        toast.error('Connect hone mein samay lag raha hai. Page re-load karke try karein.');
-      }
-    }, 8000);
-
-    const previousState = isPushEnabled;
-    setIsPushEnabled(!previousState);
+      setPushLoading(false);
+      // Removed the stale pushLoading closure check
+    }, 5000); 
 
     if (typeof window !== 'undefined') {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function(OneSignal) {
         try {
-          if (previousState) {
+          if (isPushEnabled) {
             await OneSignal.User.PushSubscription.optOut();
             setIsPushEnabled(false);
             toast.success('🔕 Notifications band ho gayi');
@@ -167,37 +162,20 @@ export default function Profile() {
               return;
             }
 
-            // Special handling for mobile/safari: Use Slidedown as it's more reliable
-            console.log("[Push] Triggering Slidedown prompt...");
-            await OneSignal.Slidedown.promptPush();
-
-            // Also try explicit opt-in in case slidedown was already shown
-            await OneSignal.User.PushSubscription.optIn();
-            
-            // Give it a moment to sync
-            await new Promise(r => setTimeout(r, 2000));
-            
-            const isNowEnabled = OneSignal.User.PushSubscription.optedIn || false;
-            setIsPushEnabled(isNowEnabled);
-
-            if (isNowEnabled) {
-              if (isLoggedIn && user?.uid) {
-                await OneSignal.login(user.uid);
-                await OneSignal.User.addTag("phone", user.phone);
-                if (user.name) await OneSignal.User.addTag("name", user.name);
-              }
-              toast.success('🔔 Notifications chalu ho gayi!');
-            } else {
-              // If still not enabled, it might be because they need to click the browser's own 'Allow'
-              console.log("[Push] Permission state:", Notification.permission);
-              if (Notification.permission === 'default') {
-                toast("Upar 'Allow' button par click karein", { icon: '☝️' });
-              }
+            // We do NOT await promptPush or optIn directly if they block on user input.
+            // We call them and let the event listener handle the state change if it succeeds.
+            if (Notification.permission === 'default') {
+              console.log("[Push] Triggering Request Permission...");
+              toast("Screen ki Notification permission ko Allow karein", { icon: '☝️', duration: 4000 });
             }
+
+            // This will trigger the browser prompt. We do NOT await it here.
+            OneSignal.User.PushSubscription.optIn().catch(e => console.error(e));
+            
+            // State will be updated by the addEventListener("change") in useEffect when user clicks Allow.
           }
         } catch (err) {
           console.error('Push toggle error:', err);
-          setIsPushEnabled(previousState);
           toast.error('Network error key wajah se ruk gaya. Try again.');
         } finally {
           clearTimeout(safetyTimeout);
