@@ -191,8 +191,12 @@ export default function Profile() {
       setNeedsPhone(true);
       toast.success(`Welcome ${googleUser.displayName || 'Customer'}!`);
     } catch (error) {
-      console.error(error);
-      toast.error('Google Sign-In failed or was cancelled.');
+      console.error("Sign-in error details:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        toast.error('Domain not authorized in Firebase Console! Please check Step 1.');
+      } else {
+        toast.error(`Sign-In Error: ${error.message}`);
+      }
     }
     setLoading(false);
   };
