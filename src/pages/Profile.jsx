@@ -140,7 +140,14 @@ export default function Profile() {
 
     setPushLoading(true);
     
-    // Optimistic UI update for instant feedback
+    // Safety Timeout: If OneSignal hangs for 8 seconds, stop loading
+    const safetyTimeout = setTimeout(() => {
+      if (pushLoading) {
+        setPushLoading(false);
+        toast.error('Connect hone mein samay lag raha hai. Page re-load karke try karein.');
+      }
+    }, 8000);
+
     const previousState = isPushEnabled;
     setIsPushEnabled(!previousState);
 
@@ -153,34 +160,51 @@ export default function Profile() {
             setIsPushEnabled(false);
             toast.success('🔕 Notifications band ho gayi');
           } else {
-            // Check if permission is needed before opting in
-            if (Notification.permission === 'default') {
-              await OneSignal.Slidedown.promptPush();
+            // Check if browsing in restricted mode
+            if (!OneSignal.Notifications.isPushSupported()) {
+              toast.error('Aapka browser push notifications support nahi karta.');
+              setIsPushEnabled(false);
+              return;
             }
+
+            // Explicitly request permission if not granted
+            if (Notification.permission !== 'granted') {
+              console.log("[Push] Requesting permission...");
+              await OneSignal.Notifications.requestPermission();
+            }
+
+            console.log("[Push] Attempting opt-in...");
             await OneSignal.User.PushSubscription.optIn();
-            const isOptedIn = OneSignal.User.PushSubscription.optedIn || false;
-            setIsPushEnabled(isOptedIn);
-            if (isOptedIn) {
-              // Ensure we link and tag them upon opt-in
+            
+            // Give it a moment to sync
+            await new Promise(r => setTimeout(r, 1000));
+            
+            const isNowEnabled = OneSignal.User.PushSubscription.optedIn || false;
+            setIsPushEnabled(isNowEnabled);
+
+            if (isNowEnabled) {
               if (isLoggedIn && user?.uid) {
                 await OneSignal.login(user.uid);
                 await OneSignal.User.addTag("phone", user.phone);
-                if (user.name) {
-                  await OneSignal.User.addTag("name", user.name);
-                }
+                if (user.name) await OneSignal.User.addTag("name", user.name);
               }
               toast.success('🔔 Notifications chalu ho gayi!');
+            } else if (Notification.permission === 'granted') {
+              // Permission is there but subscription failed, try forcing a prompt
+              await OneSignal.Slidedown.promptPush();
             }
           }
         } catch (err) {
           console.error('Push toggle error:', err);
           setIsPushEnabled(previousState);
-          toast.error('Notification error. Retry karein.');
+          toast.error('Network error key wajah se ruk gaya. Try again.');
         } finally {
+          clearTimeout(safetyTimeout);
           setPushLoading(false);
         }
       });
     } else {
+      clearTimeout(safetyTimeout);
       setPushLoading(false);
     }
   };
