@@ -130,21 +130,12 @@ export default function Profile() {
   const togglePush = async () => {
     if (pushLoading) return; // Prevent double tap
 
-    // Check if permission is blocked in browser settings
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (!isPushEnabled && Notification.permission === 'denied') {
-        toast.error('⚠️ Apne browser settings mein notification permission ko allow/reset karein!');
-        return;
-      }
-    }
-
     setPushLoading(true);
     
-    // Proper Safety Timeout: Will force-resolve the loading state
+    // Fallback if OneSignal hangs
     const safetyTimeout = setTimeout(() => {
       setPushLoading(false);
-      // Removed the stale pushLoading closure check
-    }, 5000); 
+    }, 4000); 
 
     if (typeof window !== 'undefined') {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -155,28 +146,13 @@ export default function Profile() {
             setIsPushEnabled(false);
             toast.success('🔕 Notifications band ho gayi');
           } else {
-            // Check if browsing in restricted mode
-            if (!OneSignal.Notifications.isPushSupported()) {
-              toast.error('Aapka browser push notifications support nahi karta.');
-              setIsPushEnabled(false);
-              return;
-            }
-
-            // We do NOT await promptPush or optIn directly if they block on user input.
-            // We call them and let the event listener handle the state change if it succeeds.
-            if (Notification.permission === 'default') {
-              console.log("[Push] Triggering Request Permission...");
-              toast("Screen ki Notification permission ko Allow karein", { icon: '☝️', duration: 4000 });
-            }
-
-            // This will trigger the browser prompt. We do NOT await it here.
-            OneSignal.User.PushSubscription.optIn().catch(e => console.error(e));
-            
-            // State will be updated by the addEventListener("change") in useEffect when user clicks Allow.
+            // Force Slidedown in OneSignal v16
+            await OneSignal.Slidedown.promptPush();
+            // Automatically handled by listener, but we ensure loading is stopped immediately
           }
         } catch (err) {
           console.error('Push toggle error:', err);
-          toast.error('Network error key wajah se ruk gaya. Try again.');
+          toast.error('Browser Permission Error. Lock(🔒) icon mein notification allow karein.');
         } finally {
           clearTimeout(safetyTimeout);
           setPushLoading(false);
