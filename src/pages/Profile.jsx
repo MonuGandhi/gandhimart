@@ -167,17 +167,15 @@ export default function Profile() {
               return;
             }
 
-            // Explicitly request permission if not granted
-            if (Notification.permission !== 'granted') {
-              console.log("[Push] Requesting permission...");
-              await OneSignal.Notifications.requestPermission();
-            }
+            // Special handling for mobile/safari: Use Slidedown as it's more reliable
+            console.log("[Push] Triggering Slidedown prompt...");
+            await OneSignal.Slidedown.promptPush();
 
-            console.log("[Push] Attempting opt-in...");
+            // Also try explicit opt-in in case slidedown was already shown
             await OneSignal.User.PushSubscription.optIn();
             
             // Give it a moment to sync
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 2000));
             
             const isNowEnabled = OneSignal.User.PushSubscription.optedIn || false;
             setIsPushEnabled(isNowEnabled);
@@ -189,9 +187,12 @@ export default function Profile() {
                 if (user.name) await OneSignal.User.addTag("name", user.name);
               }
               toast.success('🔔 Notifications chalu ho gayi!');
-            } else if (Notification.permission === 'granted') {
-              // Permission is there but subscription failed, try forcing a prompt
-              await OneSignal.Slidedown.promptPush();
+            } else {
+              // If still not enabled, it might be because they need to click the browser's own 'Allow'
+              console.log("[Push] Permission state:", Notification.permission);
+              if (Notification.permission === 'default') {
+                toast("Upar 'Allow' button par click karein", { icon: '☝️' });
+              }
             }
           }
         } catch (err) {
