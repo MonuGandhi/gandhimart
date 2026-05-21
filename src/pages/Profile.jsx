@@ -143,33 +143,27 @@ export default function Profile() {
       setPushLoading(false);
     }, 5000); 
 
-    if (typeof window !== 'undefined') {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          if (isPushEnabled) {
-            await OneSignal.User.PushSubscription.optOut();
-            setIsPushEnabled(false);
-            toast.success('🔕 Notifications band ho gayi');
-          } else {
-            // Asli Native Android/iOS permission mangne ka code
-            if (Notification.permission !== 'granted') {
-               await OneSignal.Notifications.requestPermission();
-            }
-            
-            // Uske baad OneSignal ko start karne ka command
-            await OneSignal.User.PushSubscription.optIn();
+    try {
+      if (typeof window !== 'undefined' && window.OneSignal) {
+        if (isPushEnabled) {
+          await window.OneSignal.User.PushSubscription.optOut();
+          setIsPushEnabled(false);
+          toast.success('🔕 Notifications band ho gayi');
+        } else {
+          // Direct Click Event me Permission mangna (Browser Popup Block na kare isliye direct call)
+          if (Notification.permission !== 'granted') {
+             await window.OneSignal.Notifications.requestPermission();
           }
-        } catch (err) {
-          console.error('Push toggle error:', err);
-          alert('OneSignal Error: ' + (err.message || 'Permission denied by browser.'));
-          toast.error('Browser Permission Error. Lock(🔒) icon mein notification allow karein.');
-        } finally {
-          clearTimeout(safetyTimeout);
-          setPushLoading(false);
+          
+          await window.OneSignal.User.PushSubscription.optIn();
         }
-      });
-    } else {
+      } else {
+        toast.error('G Mart notifications load ho rahe hain. Page refresh karein.');
+      }
+    } catch (err) {
+      console.error('Push toggle error:', err);
+      alert('Error popup block by browser: ' + (err.message || 'Apne browser header mein notification ON karein.'));
+    } finally {
       clearTimeout(safetyTimeout);
       setPushLoading(false);
     }
