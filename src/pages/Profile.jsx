@@ -153,6 +153,10 @@ export default function Profile() {
             setIsPushEnabled(false);
             toast.success('🔕 Notifications band ho gayi');
           } else {
+            // Check if permission is needed before opting in
+            if (Notification.permission === 'default') {
+              await OneSignal.Slidedown.promptPush();
+            }
             await OneSignal.User.PushSubscription.optIn();
             const isOptedIn = OneSignal.User.PushSubscription.optedIn || false;
             setIsPushEnabled(isOptedIn);
@@ -166,21 +170,17 @@ export default function Profile() {
                 }
               }
               toast.success('🔔 Notifications chalu ho gayi!');
-            } else {
-              toast.error('❌ Notification permission nahi mili!');
             }
           }
         } catch (err) {
           console.error('Push toggle error:', err);
-          // Rollback on error
           setIsPushEnabled(previousState);
-          toast.error('Notification settings change nahi ho payi. Retry karo.');
+          toast.error('Notification error. Retry karein.');
         } finally {
           setPushLoading(false);
         }
       });
     } else {
-      setIsPushEnabled(previousState);
       setPushLoading(false);
     }
   };
