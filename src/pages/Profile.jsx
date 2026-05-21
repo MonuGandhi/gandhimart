@@ -162,6 +162,7 @@ export default function Profile() {
           }
         } catch (err) {
           console.error('Push toggle error:', err);
+          alert('OneSignal Error: ' + (err.message || 'Permission denied by browser.'));
           toast.error('Browser Permission Error. Lock(🔒) icon mein notification allow karein.');
         } finally {
           clearTimeout(safetyTimeout);
