@@ -11,13 +11,12 @@ export default async function handler(req, res) {
   }
 
   // 2. Setup OneSignal credentials
-  // We'll use environment variables for security
-  const ONESIGNAL_APP_ID = process.env.VITE_ONESIGNAL_APP_ID || process.env.ONESIGNAL_APP_ID;
-  const ONESIGNAL_REST_API_KEY = process.env.ONESIGNAL_REST_API_KEY;
+  const ONESIGNAL_APP_ID = (process.env.ONESIGNAL_APP_ID || "").trim();
+  const ONESIGNAL_REST_API_KEY = (process.env.ONESIGNAL_REST_API_KEY || "").trim();
 
-  if (!ONESIGNAL_REST_API_KEY) {
+  if (!ONESIGNAL_REST_API_KEY || !ONESIGNAL_APP_ID) {
     return res.status(500).json({ 
-      error: 'ONESIGNAL_REST_API_KEY is not configured on the server.' 
+      error: `Server Configuration Missing: ${!ONESIGNAL_APP_ID ? 'APP_ID ' : ''}${!ONESIGNAL_REST_API_KEY ? 'REST_API_KEY' : ''}`
     });
   }
 
