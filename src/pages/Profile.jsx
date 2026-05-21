@@ -104,9 +104,24 @@ export default function Profile() {
         }
 
         // Listen for changes
-        OneSignal.User.PushSubscription.addEventListener("change", (event) => {
-          setIsPushEnabled(event.current.optedIn);
+        OneSignal.User.PushSubscription.addEventListener("change", async (event) => {
+          const isOptedIn = event.current.optedIn;
+          setIsPushEnabled(isOptedIn);
           setPushLoading(false);
+
+          // Update Firestore when subscription status changes
+          if (isLoggedIn && user?.email) {
+            try {
+              const userRef = doc(db, 'users', user.email.toLowerCase());
+              await updateDoc(userRef, {
+                pushEnabled: isOptedIn,
+                lastPushUpdate: new Date().toISOString()
+              });
+              console.log("[PushSync] Firestore updated:", isOptedIn);
+            } catch (err) {
+              console.error("[PushSync] Firestore error:", err);
+            }
+          }
         });
       });
     }
