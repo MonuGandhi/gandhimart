@@ -23,15 +23,25 @@ export default function Category() {
 
   const [sort, setSort] = useState('relevance');
   const [showFilters, setShowFilters] = useState(false);
-  const [maxPrice, setMaxPrice] = useState(500);
+
+  const maxCategoryPrice = useMemo(() => {
+    if (allProducts.length === 0) return 500;
+    const prices = allProducts.map((p) => p.price || 0);
+    const maxVal = Math.max(...prices);
+    return maxVal > 500 ? Math.ceil(maxVal / 10) * 10 : 500;
+  }, [allProducts]);
+
+  const [maxPrice, setMaxPrice] = useState(null);
   const [minRating, setMinRating] = useState(0);
   const [showSort, setShowSort] = useState(false);
 
   const brands = useMemo(() => [...new Set(allProducts.map((p) => p.brand))], [allProducts]);
   const [selectedBrands, setSelectedBrands] = useState([]);
 
+  const currentMaxPrice = maxPrice !== null ? maxPrice : maxCategoryPrice;
+
   const filtered = useMemo(() => {
-    let result = allProducts.filter((p) => p.price <= maxPrice);
+    let result = allProducts.filter((p) => p.price <= currentMaxPrice);
     if (minRating > 0) result = result.filter((p) => p.rating >= minRating);
     if (selectedBrands.length > 0) result = result.filter((p) => selectedBrands.includes(p.brand));
 
@@ -42,7 +52,7 @@ export default function Category() {
       case 'discount': return [...result].sort((a, b) => b.discount - a.discount);
       default: return result;
     }
-  }, [allProducts, sort, maxPrice, minRating, selectedBrands]);
+  }, [allProducts, sort, currentMaxPrice, minRating, selectedBrands]);
 
   const toggleBrand = (brand) => {
     setSelectedBrands((prev) =>
@@ -129,16 +139,16 @@ export default function Category() {
             <h3 className="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Filters</h3>
 
             <div className="mb-4">
-              <p className="text-xs font-semibold text-gray-600 mb-2">Max Price: ₹{maxPrice}</p>
+              <p className="text-xs font-semibold text-gray-600 mb-2">Max Price: ₹{currentMaxPrice}</p>
               <input
                 type="range"
-                min={10} max={500} step={10}
-                value={maxPrice}
+                min={10} max={maxCategoryPrice} step={10}
+                value={currentMaxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-[#1CA672]"
               />
               <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
-                <span>₹10</span><span>₹500</span>
+                <span>₹10</span><span>₹{maxCategoryPrice}</span>
               </div>
             </div>
 
@@ -175,7 +185,7 @@ export default function Category() {
             </div>
 
             <button
-              onClick={() => { setMaxPrice(500); setMinRating(0); setSelectedBrands([]); }}
+              onClick={() => { setMaxPrice(null); setMinRating(0); setSelectedBrands([]); }}
               className="mt-4 w-full text-xs text-[#1CA672] font-semibold py-1"
             >
               Clear All
