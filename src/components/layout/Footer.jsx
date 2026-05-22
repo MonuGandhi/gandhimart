@@ -19,7 +19,7 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t border-gray-100 pt-6 pb-24 md:pt-8 md:pb-24 mt-3 md:mt-4">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10 mb-8 md:mb-12">
+        <div className="flex flex-col gap-6 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-10 mb-8 md:mb-12">
           {/* Brand */}
           <div className="space-y-3 md:space-y-4">
             <Link to="/" className="flex items-center gap-2 mb-3 md:mb-4 group">
@@ -39,50 +39,58 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h4 className="font-black text-gray-900 mb-3 md:mb-6 uppercase text-[10px] md:text-xs tracking-widest">Quick Links</h4>
-            <ul className="space-y-2 md:space-y-4">
-              <li><Link to="/" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">Home</Link></li>
-              <li><Link to="/orders" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">My Orders</Link></li>
-              <li><Link to="/profile" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">My Wallet</Link></li>
-              <li><Link to="/profile" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">Profile Settings</Link></li>
+          <div className="space-y-2 md:space-y-4 border-t border-gray-50 pt-4 md:border-t-0 md:pt-0">
+            <h4 className="font-black text-gray-900 uppercase text-[10px] md:text-xs tracking-widest">Quick Links</h4>
+            <ul className="flex flex-wrap items-center gap-x-3 gap-y-1.5 md:flex-col md:items-start md:gap-y-3">
+              <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
+                <Link to="/" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">Home</Link>
+              </li>
+              <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
+                <Link to="/orders" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">My Orders</Link>
+              </li>
+              <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
+                <Link to="/profile" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">My Wallet</Link>
+              </li>
+              <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
+                <Link to="/profile" className="text-xs md:text-sm text-gray-500 hover:text-[#1CA672] font-medium transition-colors">Profile Settings</Link>
+              </li>
             </ul>
           </div>
 
           {/* Categories */}
-          <div>
-            <h4 className="font-black text-gray-900 mb-3 md:mb-6 uppercase text-[10px] md:text-xs tracking-widest">Categories</h4>
-            <ul className="space-y-2 md:space-y-4 text-xs md:text-sm text-gray-500 font-medium">
+          <div className="space-y-2 md:space-y-4 border-t border-gray-50 pt-4 md:border-t-0 md:pt-0">
+            <h4 className="font-black text-gray-900 uppercase text-[10px] md:text-xs tracking-widest">Categories</h4>
+            <ul className="flex flex-wrap items-center gap-x-3 gap-y-1.5 md:flex-col md:items-start md:gap-y-3 text-xs md:text-sm text-gray-500 font-medium">
               {categories && categories.length > 0 ? categories.slice(0, 5).map(cat => (
-                <li key={cat.id}>
+                <li key={cat.id} className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
                   <Link to={`/category/${cat.slug}`} className="hover:text-[#1CA672] transition-colors">
                     {cat.name}
                   </Link>
                 </li>
               )) : (
                 <>
-                  <li>Fresh Vegetables</li>
-                  <li>Daily Fruits</li>
-                  <li>Dairy & Bakery</li>
-                  <li>Snacks & Drinks</li>
+                  <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">Fresh Vegetables</li>
+                  <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">Daily Fruits</li>
+                  <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">Dairy & Bakery</li>
+                  <li className="border-r border-gray-200 pr-3 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">Snacks & Drinks</li>
                 </>
               )}
             </ul>
           </div>
 
           {/* Contact */}
-          <div>
-            <h4 className="font-black text-gray-900 mb-3 md:mb-6 uppercase text-[10px] md:text-xs tracking-widest">Contact Us</h4>
-            <ul className="space-y-2 md:space-y-4">
-              <li className="flex items-start gap-2 text-xs md:text-sm text-gray-500 font-medium">
+          <div className="space-y-2 md:space-y-4 border-t border-gray-50 pt-4 md:border-t-0 md:pt-0">
+            <h4 className="font-black text-gray-900 uppercase text-[10px] md:text-xs tracking-widest">Contact Us</h4>
+            <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 md:flex-col md:items-start md:gap-y-3">
+              <li className="flex items-start gap-2 text-xs md:text-sm text-gray-500 font-medium border-r border-gray-200 pr-4 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
                 <MapPin size={16} className="shrink-0 text-gray-400 mt-0.5" />
                 <span>{storeAddress}</span>
               </li>
-              <li className="flex items-center gap-2 text-xs md:text-sm text-gray-500 font-medium">
+              <li className="flex items-center gap-2 text-xs md:text-sm text-gray-500 font-medium border-r border-gray-200 pr-4 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
                 <Phone size={16} className="shrink-0 text-gray-400" />
                 <a href={`tel:+91${storePhone}`} className="hover:text-[#1CA672] transition-colors">+91 {storePhone}</a>
               </li>
-              <li className="flex items-center gap-2 text-xs md:text-sm text-gray-500 font-medium">
+              <li className="flex items-center gap-2 text-xs md:text-sm text-gray-500 font-medium border-r border-gray-200 pr-4 last:border-r-0 last:pr-0 md:border-r-0 md:pr-0">
                 <MessageCircle size={16} className="shrink-0 text-gray-400" />
                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="hover:text-[#1CA672] transition-colors">WhatsApp Support</a>
               </li>
