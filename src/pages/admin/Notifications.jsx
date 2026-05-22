@@ -72,8 +72,16 @@ export default function AdminNotifications() {
           message,
           type,
           target: targetType === 'all' ? 'All Users' : selectedUserName,
-            phone: targetType === 'all' ? null : selectedUserPhone,
+          phone: targetType === 'all' ? null : selectedUserPhone,
+        });
+        
+        // 4. Reset form state
+        toast.success('✅ Push History mein add ho gaya!');
+        setTitle('');
+        setMessage('');
+        setSelectedUserUid('');
         setSelectedUserName('');
+        setSelectedUserPhone('');
         setUserSearch('');
       } else {
         console.error("[Push Center] Push Result Error:", pushResult.error);

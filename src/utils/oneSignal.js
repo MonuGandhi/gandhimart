@@ -39,9 +39,8 @@ export const sendGeneralNotification = async (title, message, targetType, target
       // Broadcast to All Active Users
       notification.included_segments = ["Total Subscriptions"];
     } else if (uids && uids.length > 0) {
-      // Send only to specific user UIDs
-      notification.include_aliases = { external_id: uids };
-      notification.target_channel = "push";
+      // Send only to specific user UIDs (OneSignal REST API expects this field)
+      notification.include_external_user_ids = uids;
     } else {
       return { success: false, error: "Target (All or User ID) fail." };
     }
