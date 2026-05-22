@@ -137,15 +137,15 @@ export default function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Store Name</label>
-              <input type="text" value={formData.storeName || ''} onChange={(e) => setFormData({...formData, storeName: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+              <input type="text" value={formData.storeName || ''} onChange={(e) => setFormData({ ...formData, storeName: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Store Phone</label>
-              <input type="text" value={formData.storePhone || ''} onChange={(e) => setFormData({...formData, storePhone: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+              <input type="text" value={formData.storePhone || ''} onChange={(e) => setFormData({ ...formData, storePhone: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-1">Store Address</label>
-              <textarea value={formData.storeAddress || ''} onChange={(e) => setFormData({...formData, storeAddress: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" rows="2" />
+              <textarea value={formData.storeAddress || ''} onChange={(e) => setFormData({ ...formData, storeAddress: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" rows="2" />
             </div>
           </div>
         </div>
@@ -156,32 +156,32 @@ export default function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Support Email</label>
-              <input type="text" value={formData.supportEmail || ''} onChange={(e) => setFormData({...formData, supportEmail: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="monugandhi03@gmail.com" />
+              <input type="text" value={formData.supportEmail || ''} onChange={(e) => setFormData({ ...formData, supportEmail: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="monugandhi03@gmail.com" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Support Phone</label>
-              <input type="text" value={formData.supportPhone || ''} onChange={(e) => setFormData({...formData, supportPhone: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="8607424026" />
+              <input type="text" value={formData.supportPhone || ''} onChange={(e) => setFormData({ ...formData, supportPhone: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="8607424026" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-1">WhatsApp Chat Link</label>
-              <input type="text" value={formData.whatsappLink || ''} onChange={(e) => setFormData({...formData, whatsappLink: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://wa.me/918607424026" />
+              <input type="text" value={formData.whatsappLink || ''} onChange={(e) => setFormData({ ...formData, whatsappLink: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://wa.me/918607424026" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-1">WhatsApp Pre-filled Message</label>
-              <input type="text" value={formData.whatsappMessage || ''} onChange={(e) => setFormData({...formData, whatsappMessage: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="Hello G Mart! I need help with my order." />
+              <input type="text" value={formData.whatsappMessage || ''} onChange={(e) => setFormData({ ...formData, whatsappMessage: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="Hello G Mart! I need help with my order." />
               <p className="text-xs text-gray-400 mt-1">This message will be pre-filled inside the customer's chat screen when they tap WhatsApp Support.</p>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Instagram Link</label>
-              <input type="text" value={formData.instagramLink || ''} onChange={(e) => setFormData({...formData, instagramLink: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://www.instagram.com/monugandhi_/" />
+              <input type="text" value={formData.instagramLink || ''} onChange={(e) => setFormData({ ...formData, instagramLink: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://www.instagram.com/monugandhi_/" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Facebook Link</label>
-              <input type="text" value={formData.facebookLink || ''} onChange={(e) => setFormData({...formData, facebookLink: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://facebook.com" />
+              <input type="text" value={formData.facebookLink || ''} onChange={(e) => setFormData({ ...formData, facebookLink: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://facebook.com" />
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 mb-1">Twitter (X) Link</label>
-              <input type="text" value={formData.twitterLink || ''} onChange={(e) => setFormData({...formData, twitterLink: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://twitter.com" />
+              <input type="text" value={formData.twitterLink || ''} onChange={(e) => setFormData({ ...formData, twitterLink: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="https://twitter.com" />
             </div>
           </div>
         </div>
@@ -192,44 +192,173 @@ export default function Settings() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Min Order Amount (₹)</label>
-              <input type="number" value={formData.minOrderAmount} onChange={(e) => setFormData({...formData, minOrderAmount: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+              <input type="number" value={formData.minOrderAmount} onChange={(e) => setFormData({ ...formData, minOrderAmount: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Free Delivery Above (₹)</label>
-              <input type="number" value={formData.freeDeliveryAbove} onChange={(e) => setFormData({...formData, freeDeliveryAbove: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+              <input type="number" value={formData.freeDeliveryAbove} onChange={(e) => setFormData({ ...formData, freeDeliveryAbove: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Delivery Fee (₹)</label>
-              <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({...formData, deliveryFee: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+              <input type="number" value={formData.deliveryFee} onChange={(e) => setFormData({ ...formData, deliveryFee: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">GST Percentage (%)</label>
-              <input type="number" value={formData.gstPercentage} onChange={(e) => setFormData({...formData, gstPercentage: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+              <input type="number" value={formData.gstPercentage} onChange={(e) => setFormData({ ...formData, gstPercentage: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Est. Delivery Time (mins)</label>
-              <input type="number" value={formData.estimatedDeliveryTime} onChange={(e) => setFormData({...formData, estimatedDeliveryTime: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+              <input type="number" value={formData.estimatedDeliveryTime} onChange={(e) => setFormData({ ...formData, estimatedDeliveryTime: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
             </div>
           </div>
-          
+
+          {/* Location Service Settings */}
+          <div className="mt-6 border-t border-gray-100 pt-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Location Service Settings</h2>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <input
+                  type="checkbox"
+                  id="locationServiceEnabled"
+                  checked={formData.locationService?.enabled || false}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    locationService: {
+                      ...formData.locationService,
+                      enabled: e.target.checked
+                    }
+                  })}
+                  className="h-4 w-4 text-[#1CA672] bg-gray-50 border-gray-300 rounded focus:ring-[#1CA672]"
+                />
+                <label htmlFor="locationServiceEnabled" className="text-sm font-bold text-gray-700">
+                  Enable Location Service Restrictions
+                </label>
+              </div>
+
+              {formData.locationService?.enabled && (
+                <div className="bg-gray-50 rounded-xl p-4 space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Village/Area Name</label>
+                    <input
+                      type="text"
+                      value={formData.locationService?.villageName || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        locationService: {
+                          ...formData.locationService,
+                          villageName: e.target.value
+                        }
+                      })}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
+                      placeholder="e.g., Madhosinghana"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Latitude</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={formData.locationService?.center?.lat || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          locationService: {
+                            ...formData.locationService,
+                            center: {
+                              ...formData.locationService?.center,
+                              lat: parseFloat(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
+                        placeholder="e.g., 29.5833"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-1">Longitude</label>
+                      <input
+                        type="number"
+                        step="0.000001"
+                        value={formData.locationService?.center?.lng || ''}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          locationService: {
+                            ...formData.locationService,
+                            center: {
+                              ...formData.locationService?.center,
+                              lng: parseFloat(e.target.value) || 0
+                            }
+                          }
+                        })}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
+                        placeholder="e.g., 75.1667"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Delivery Radius (meters)</label>
+                    <input
+                      type="number"
+                      value={formData.locationService?.radius || 10000}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        locationService: {
+                          ...formData.locationService,
+                          radius: parseInt(e.target.value) || 10000
+                        }
+                      })}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
+                      placeholder="e.g., 10000"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Users outside this radius from the center point will not be able to place orders
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Out of Area Message</label>
+                    <textarea
+                      value={formData.locationService?.message || ''}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        locationService: {
+                          ...formData.locationService,
+                          message: e.target.value
+                        }
+                      })}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
+                      rows="3"
+                      placeholder="Message shown to users outside delivery area"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This message will be shown to users who are outside your delivery area
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="mt-4">
             <label className="block text-sm font-bold text-gray-700 mb-1">Announcement Banner Text</label>
-            <input type="text" value={formData.announcementText} onChange={(e) => setFormData({...formData, announcementText: e.target.value})} placeholder="Show a message at the top of the homepage" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
+            <input type="text" value={formData.announcementText} onChange={(e) => setFormData({ ...formData, announcementText: e.target.value })} placeholder="Show a message at the top of the homepage" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Banner Background Color</label>
               <div className="flex gap-2">
-                <input type="color" value={formData.announcementBgColor || '#1CA672'} onChange={(e) => setFormData({...formData, announcementBgColor: e.target.value})} className="h-10 w-10 rounded cursor-pointer" />
-                <input type="text" value={formData.announcementBgColor || '#1CA672'} onChange={(e) => setFormData({...formData, announcementBgColor: e.target.value})} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
+                <input type="color" value={formData.announcementBgColor || '#1CA672'} onChange={(e) => setFormData({ ...formData, announcementBgColor: e.target.value })} className="h-10 w-10 rounded cursor-pointer" />
+                <input type="text" value={formData.announcementBgColor || '#1CA672'} onChange={(e) => setFormData({ ...formData, announcementBgColor: e.target.value })} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Banner Text Color</label>
               <div className="flex gap-2">
-                <input type="color" value={formData.announcementTextColor || '#ffffff'} onChange={(e) => setFormData({...formData, announcementTextColor: e.target.value})} className="h-10 w-10 rounded cursor-pointer" />
-                <input type="text" value={formData.announcementTextColor || '#ffffff'} onChange={(e) => setFormData({...formData, announcementTextColor: e.target.value})} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
+                <input type="color" value={formData.announcementTextColor || '#ffffff'} onChange={(e) => setFormData({ ...formData, announcementTextColor: e.target.value })} className="h-10 w-10 rounded cursor-pointer" />
+                <input type="text" value={formData.announcementTextColor || '#ffffff'} onChange={(e) => setFormData({ ...formData, announcementTextColor: e.target.value })} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
               </div>
             </div>
           </div>
@@ -238,15 +367,15 @@ export default function Settings() {
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Header Background Color (G Mart Section)</label>
               <div className="flex gap-2">
-                <input type="color" value={formData.headerBgColor || '#ffffff'} onChange={(e) => setFormData({...formData, headerBgColor: e.target.value})} className="h-10 w-10 rounded cursor-pointer" />
-                <input type="text" value={formData.headerBgColor || '#ffffff'} onChange={(e) => setFormData({...formData, headerBgColor: e.target.value})} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
+                <input type="color" value={formData.headerBgColor || '#ffffff'} onChange={(e) => setFormData({ ...formData, headerBgColor: e.target.value })} className="h-10 w-10 rounded cursor-pointer" />
+                <input type="text" value={formData.headerBgColor || '#ffffff'} onChange={(e) => setFormData({ ...formData, headerBgColor: e.target.value })} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
               </div>
             </div>
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Header Text Color</label>
               <div className="flex gap-2">
-                <input type="color" value={formData.headerTextColor || '#111827'} onChange={(e) => setFormData({...formData, headerTextColor: e.target.value})} className="h-10 w-10 rounded cursor-pointer" />
-                <input type="text" value={formData.headerTextColor || '#111827'} onChange={(e) => setFormData({...formData, headerTextColor: e.target.value})} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
+                <input type="color" value={formData.headerTextColor || '#111827'} onChange={(e) => setFormData({ ...formData, headerTextColor: e.target.value })} className="h-10 w-10 rounded cursor-pointer" />
+                <input type="text" value={formData.headerTextColor || '#111827'} onChange={(e) => setFormData({ ...formData, headerTextColor: e.target.value })} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]" />
               </div>
             </div>
           </div>
@@ -259,12 +388,12 @@ export default function Settings() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Store UPI ID (For Scan & Pay)</label>
-                <input 
-                  type="text" 
-                  value={formData.upiId || ''} 
-                  onChange={(e) => setFormData({...formData, upiId: e.target.value})} 
-                  placeholder="e.g. 9876543210@paytm" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" 
+                <input
+                  type="text"
+                  value={formData.upiId || ''}
+                  onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
+                  placeholder="e.g. 9876543210@paytm"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
                 />
                 <p className="text-xs text-gray-500 mt-1">Leave empty to disable Scan & Pay option</p>
               </div>
@@ -280,7 +409,7 @@ export default function Settings() {
               Admin Security
             </h2>
             <p className="text-xs text-gray-500 mb-4">Manage login PINs for Admin accounts. These are verified from the database.</p>
-            
+
             <div className="space-y-4">
               <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
                 <div className="flex justify-between items-center mb-3">
@@ -288,7 +417,7 @@ export default function Settings() {
                     <p className="font-bold text-gray-900">monugandhi5911</p>
                     <p className="text-xs text-amber-700 font-medium">Master Pro Admin</p>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => openPinChangeModal('monugandhi5911')}
                     className="px-4 py-2 bg-white border border-amber-200 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition-colors"
@@ -304,7 +433,7 @@ export default function Settings() {
                     <p className="font-bold text-gray-900">Standard Admin</p>
                     <p className="text-xs text-gray-500 font-medium">Username: admin</p>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     disabled
                     className="px-4 py-2 bg-gray-200 text-gray-400 text-xs font-bold rounded-lg cursor-not-allowed"
@@ -336,7 +465,7 @@ export default function Settings() {
       {pinChangeModal.open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
-            
+
             {/* Header */}
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">

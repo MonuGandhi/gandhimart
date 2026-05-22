@@ -6,6 +6,7 @@ import { useAuthStore } from '../store/authStore';
 import { useOrdersStore } from '../store/ordersStore';
 import { useAdminStore } from '../store/adminStore';
 import { formatPrice } from '../utils/helpers';
+import locationService from '../utils/locationService';
 
 import toast from 'react-hot-toast';
 import {
@@ -20,7 +21,7 @@ export default function Checkout() {
     const navigate = useNavigate();
     const { user, isLoggedIn } = useAuthStore();
     const storeSettings = useAdminStore((s) => s.storeSettings);
-    
+
     // Redirect if not logged in
     useEffect(() => {
         if (!isLoggedIn) {
@@ -159,23 +160,60 @@ export default function Checkout() {
         if (savedRefCode && !appliedReferral && !user?.referredBy) {
             setTimeout(() => handleApplyReferral(savedRefCode), 0);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user?.referredBy, appliedReferral]); 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.referredBy, appliedReferral]);
 
     const deliveryAddress = { ...addressForm };
     const isAddressComplete = addressForm.name && addressForm.phone && addressForm.address;
 
     const handlePlaceOrder = async () => {
-        if (!isLoggedIn) { 
-            toast.error('Please login to place an order'); 
+        if (!isLoggedIn) {
+            toast.error('Please login to place an order');
             navigate('/profile');
-            return; 
+            return;
         }
         if (items.length === 0) { toast.error('Your cart is empty'); return; }
         if (!isAddressComplete) { toast.error('Pehle delivery address fill karo'); setEditingAddress(true); return; }
 
+        // Check location restriction before placing order
+        try {
+            locationService.loadServiceAreaSettings();
+
+            // If location service is enabled, validate user location
+            if (locationService.serviceArea.enabled) {
+                const userLocation = locationService.userLocation || locationService.getCachedLocation();
+
+                if (!userLocation) {
+                    // Try to get current location
+                    const currentLocation = await locationService.getCurrentLocation();
+                    const isWithinArea = await locationService.isWithinServiceArea(currentLocation);
+
+                    if (!isWithinArea) {
+                        const outOfAreaMessage = locationService.getOutOfAreaMessage();
+                        toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
+                        return;
+                    }
+                } else {
+                    const isWithinArea = await locationService.isWithinServiceArea(userLocation);
+
+                    if (!isWithinArea) {
+                        const outOfAreaMessage = locationService.getOutOfAreaMessage();
+                        toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
+                        return;
+                    }
+                }
+            }
+        } catch (locationError) {
+            console.error('Location validation error:', locationError);
+            // If location check fails but service is enabled, block the order
+            if (locationService.serviceArea.enabled) {
+                toast.error('Unable to verify your location. Please check location permissions.');
+                return;
+            }
+        }
+
         setLoading(true);
-        
+
         // Auto-save address to profile if it's complete
         try {
             await saveAddress({ ...addressForm, village: addressForm.village || 'Madhosinghana', id: 'primary' });
@@ -517,8 +555,8 @@ export default function Checkout() {
                                 key={method.id}
                                 onClick={() => setPaymentMethod(method.id)}
                                 className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border-2 transition-all ${paymentMethod === method.id
-                                        ? 'border-[#1CA672] bg-green-50'
-                                        : 'border-gray-100 bg-gray-50 hover:border-gray-200'
+                                    ? 'border-[#1CA672] bg-green-50'
+                                    : 'border-gray-100 bg-gray-50 hover:border-gray-200'
                                     }`}
                             >
                                 <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
@@ -537,11 +575,11 @@ export default function Checkout() {
                         {paymentMethod === 'scanner' && storeSettings?.upiId && (
                             <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 text-center">
                                 <p className="text-xs font-black text-indigo-700 mb-3 uppercase tracking-wider">Payment Details</p>
-                                
+
                                 <div className="bg-white border border-indigo-100 rounded-2xl p-4 mb-4 shadow-sm">
                                     <p className="text-[10px] text-gray-400 font-black uppercase mb-1">UPI ID</p>
                                     <p className="text-lg font-black text-gray-900 tracking-wide break-all">{storeSettings.upiId}</p>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             navigator.clipboard.writeText(storeSettings.upiId);
                                             toast.success('UPI ID Copied! Paste in your app.');
@@ -559,7 +597,7 @@ export default function Checkout() {
                                     >
                                         <Smartphone size={18} /> Open UPI App
                                     </a>
-                                    
+
                                     <div className="flex items-center gap-2 justify-center text-gray-400">
                                         <div className="h-px bg-gray-200 flex-1"></div>
                                         <span className="text-[10px] font-bold uppercase">Or</span>

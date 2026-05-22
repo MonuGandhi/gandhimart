@@ -5,13 +5,13 @@ import categoriesFromJSON from '../data/categories.json';
 import productsFromJSON from '../data/products.json';
 import bannersFromJSON from '../data/banners.json';
 import { db } from '../firebase';
-import { 
-  doc, 
-  setDoc, 
-  getDoc, 
-  onSnapshot, 
-  collection, 
-  updateDoc, 
+import {
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot,
+  collection,
+  updateDoc,
   deleteDoc,
   getDocs,
   writeBatch,
@@ -26,9 +26,9 @@ export const useAdminStore = create(
       isAdminLoggedIn: false,
       adminRole: 'admin',
       currentAdminUsername: null,
-       adminAccounts: {}, // Synced from Firestore settings/admins
-       _unsubscribers: [],
-       _referralUnsub: null,
+      adminAccounts: {}, // Synced from Firestore settings/admins
+      _unsubscribers: [],
+      _referralUnsub: null,
       login: async (username, password) => {
 
 
@@ -36,21 +36,21 @@ export const useAdminStore = create(
         try {
           const adminSnap = await getDoc(doc(db, 'settings', 'admins'));
           const admins = adminSnap.exists() ? adminSnap.data() : {};
-          
+
           const enteredUser = username.trim().toLowerCase();
           if (admins[enteredUser] && admins[enteredUser].pin === password) {
             console.log("[Login] Success for user:", enteredUser);
             const userRole = admins[enteredUser].role || 'admin';
             if (userRole === 'pro_admin') localStorage.setItem('gmart_is_pro_admin', '1');
-            set({ 
-              isAdminLoggedIn: true, 
+            set({
+              isAdminLoggedIn: true,
               adminRole: userRole,
               currentAdminUsername: enteredUser
             });
-            
+
             // Start admin-only sync
             get().initAdminSync();
-            
+
             return true;
           } else {
             console.warn("[Login] Failed: Incorrect PIN or Username for", enteredUser);
@@ -67,12 +67,12 @@ export const useAdminStore = create(
         const adminRef = doc(db, 'settings', 'admins');
         const adminSnap = await getDoc(adminRef);
         const currentAdmins = adminSnap.exists() ? adminSnap.data() : {};
-        
+
         const updatedAdmins = {
           ...currentAdmins,
           [username]: { ...currentAdmins[username], ...data }
         };
-        
+
         await setDoc(adminRef, updatedAdmins);
         set({ adminAccounts: updatedAdmins });
       },
@@ -80,9 +80,9 @@ export const useAdminStore = create(
         localStorage.removeItem('gmart_is_pro_admin');
         // Unsubscribe from all listeners
         get()._unsubscribers.forEach(unsub => unsub());
-        set({ 
-          isAdminLoggedIn: false, 
-          adminRole: 'admin', 
+        set({
+          isAdminLoggedIn: false,
+          adminRole: 'admin',
           currentAdminUsername: null,
           _unsubscribers: []
         });
@@ -114,6 +114,14 @@ export const useAdminStore = create(
         isPreOrderMode: false,
         launchDateText: '15 July',
         preOrderMessage: '🛒 Ordering starts on 15 July! Explore G Mart catalog until then! 🎉',
+        // Location Service Settings
+        locationService: {
+          enabled: false,
+          villageName: 'Madhosinghana',
+          center: { lat: 29.5833, lng: 75.1667 }, // Default center coordinates for Sirsa, Haryana
+          radius: 10000, // 10km default radius in meters
+          message: 'Sorry, we currently deliver only within our village area. Thank you for your understanding!'
+        },
       },
       homepageSections: {
         trending: { id: 'trending', title: 'Trending Now 🔥', bgColor: '#1a1a1a', textColor: '#ffffff', isActive: true, variant: 'trending' },
@@ -141,6 +149,20 @@ export const useAdminStore = create(
         await setDoc(doc(db, 'settings', 'store'), updated);
       },
 
+      // Update location service settings
+      updateLocationSettings: async (locationSettings) => {
+        const store = useAdminStore.getState();
+        const updated = {
+          ...store.storeSettings,
+          locationService: {
+            ...store.storeSettings.locationService,
+            ...locationSettings
+          }
+        };
+        set({ storeSettings: updated });
+        await setDoc(doc(db, 'settings', 'store'), updated);
+      },
+
       adminProducts: [],
       adminCategories: [],
       adminBanners: [],
@@ -154,14 +176,14 @@ export const useAdminStore = create(
         if (get().isFirebaseInitialized) return;
         set({ isFirebaseInitialized: true });
         console.log('[Store] Initializing Firebase Listeners...');
-        
+
         // Auto-resume admin sync if already logged in
         if (get().isAdminLoggedIn) {
           get().initAdminSync();
         }
 
         const unsubs = [];
-        
+
         // Sync Categories
         const unsubCats = onSnapshot(collection(db, 'categories'), (snapshot) => {
           const cats = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
@@ -232,7 +254,7 @@ export const useAdminStore = create(
         if (!get().isAdminLoggedIn) return;
         console.log('[Store] Initializing Admin-only Sync...');
         const adminUnsubs = [];
-        
+
         // Sync Admin Accounts
         const unsubAdminAccounts = onSnapshot(doc(db, 'settings', 'admins'), (docSnap) => {
           if (docSnap.exists()) set({ adminAccounts: docSnap.data().list || [] });
@@ -274,7 +296,7 @@ export const useAdminStore = create(
       initializeStore: async (authUser = null) => {
         try {
           const currentUserEmail = authUser?.email?.toLowerCase();
-          
+
           const isMaster = ['monugandhi5911@gmail.com', 'monugandhi03@gmail.com'].includes(currentUserEmail);
           const isStaff = authUser?.role === 'admin' || authUser?.role === 'pro_admin' || authUser?.role === 'delivery_boy';
 
@@ -352,7 +374,7 @@ export const useAdminStore = create(
 
       resetToDefaultData: async () => {
         const batch = writeBatch(db);
-        
+
         // Reset Products
         productsFromJSON.forEach(p => {
           batch.set(doc(db, 'products', p.id.toString()), p);
@@ -406,7 +428,7 @@ export const useAdminStore = create(
         const categories = [...store.adminCategories];
         const index = categories.findIndex((c) => c.id === id);
         if (index === -1) return;
-        
+
         const newCategories = [...categories];
         if (direction === 'up' && index > 0) {
           [newCategories[index - 1], newCategories[index]] = [newCategories[index], newCategories[index - 1]];
@@ -506,12 +528,12 @@ export const useAdminStore = create(
               email: currentEmail,
               lastLogin: serverTimestamp()
             };
-            
+
             // Critical: Ensure valid UID is stored/updated
             if (userData.uid) {
               updates.uid = userData.uid;
             }
-            
+
             // Add referralCode if they don't have one saved
             if (!existingData.referralCode && myGeneratedCode) {
               updates.referralCode = myGeneratedCode;
@@ -524,7 +546,7 @@ export const useAdminStore = create(
             if (!existingData.referredBy && userData.referralCode && userData.referralCode !== myGeneratedCode) {
               updates.referredBy = userData.referralCode;
             }
-            
+
             await updateDoc(userRef, updates);
           }
 
@@ -545,7 +567,7 @@ export const useAdminStore = create(
       updateUserRole: async (email, role, staffPin = null) => {
         if (!email) return;
         const targetEmail = email.toLowerCase();
-        
+
         // Security: Master Admin Protection
         if (targetEmail === 'monugandhi5911@gmail.com') {
           toast.error('Security: Cannot change role of Master Admin');
@@ -565,7 +587,7 @@ export const useAdminStore = create(
         await setDoc(userRef, {
           walletBalance: increment(amount)
         }, { merge: true });
-        
+
         await logWalletTransaction(email.toLowerCase(), amount, amount >= 0 ? 'credit' : 'debit', 'Admin manual adjustment');
       },
 
