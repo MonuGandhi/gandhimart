@@ -320,7 +320,7 @@ export default function Profile() {
   };
 
   const handleShare = async () => {
-    const installUrl = `https://g-mart-live-b07a0.web.app/install?ref=${referralCode}`;
+    const installUrl = `https://gandhimart-c9e7.vercel.app/install?ref=${referralCode}`;
     const text = `🛒 G Mart: Get Fresh Groceries in 10 Mins!\n\n1️⃣ Install App: ${installUrl}\n2️⃣ Use Code: ${referralCode}\n3️⃣ Enable Notifications (🔔) to qualify!\n\nGet ₹10 reward after your first order! 🎁`;
     if (navigator.share) {
       try { await navigator.share({ title: 'G Mart - Refer & Earn ₹10', text }); }
