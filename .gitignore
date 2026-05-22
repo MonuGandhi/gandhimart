@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local documentation exports
+VERCEL_CHANGELOG*.md
+VERCEL_CHANGELOG*.html
