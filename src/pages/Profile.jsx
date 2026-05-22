@@ -153,6 +153,8 @@ export default function Profile() {
           // Agar permission LAREADY allowed hai, toh prompt mat dikhao, sidha ON kardo
           if (Notification.permission === 'granted') {
              await window.OneSignal.User.PushSubscription.optIn();
+             toast.success('🔔 Notifications chalu ho gayi!');
+             setIsPushEnabled(true);
           } else {
              await window.OneSignal.Slidedown.promptPush();
           }
