@@ -150,12 +150,9 @@ export default function Profile() {
           setIsPushEnabled(false);
           toast.success('🔕 Notifications band ho gayi');
         } else {
-          // Direct Click Event me Permission mangna (Browser Popup Block na kare isliye direct call)
-          if (Notification.permission !== 'granted') {
-             await window.OneSignal.Notifications.requestPermission();
-          }
-          
-          await window.OneSignal.User.PushSubscription.optIn();
+          // Use OneSignal's built-in slidedown prompt which is much more reliable
+          // especially in PWA/Standalone modes
+          await window.OneSignal.Slidedown.promptPush();
         }
       } else {
         toast.error('G Mart notifications load ho rahe hain. Page refresh karein.');
