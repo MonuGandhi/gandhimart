@@ -28,6 +28,25 @@ export default function Dashboard() {
     .filter(o => o.status === 'delivered')
     .reduce((sum, order) => sum + (order.totalAmount || order.total || 0), 0), [orders]);
     
+  const totalProfit = useMemo(() => {
+    return orders
+      .filter(o => o.status === 'delivered')
+      .reduce((sum, order) => {
+        const orderProfit = (order.items || []).reduce((itemSum, item) => {
+          const matchedProduct = products.find(p => p.id === item.id || (p.variants && p.variants.some(v => v.id === item.id)));
+          const itemCost = item.costPrice || (matchedProduct?.costPrice) || 0;
+          const itemSell = item.price || 0;
+          const qty = item.qty || item.quantity || 1;
+          
+          if (itemCost > 0) {
+            return itemSum + ((itemSell - itemCost) * qty);
+          }
+          return itemSum;
+        }, 0);
+        return sum + orderProfit;
+      }, 0);
+  }, [orders, products]);
+    
   const outOfStockCount = useMemo(() => products.filter(p => !p.inStock || (p.stock !== null && p.stock !== undefined && p.stock !== '' && Number(p.stock) < 10)).length, [products]);
   
   // Dynamic unique customers count (Orders + Registered Users)
@@ -38,6 +57,15 @@ export default function Dashboard() {
     ].filter(Boolean));
     return uniqueCustomerPhones.size;
   }, [orders, registeredUsers]);
+
+  const calcProfitForOrders = (ords) => ords.reduce((sum, o) => {
+    return sum + (o.items || []).reduce((itemSum, item) => {
+      const matchedProduct = products.find(p => p.id === item.id || (p.variants && p.variants.some(v => v.id === item.id)));
+      const itemCost = item.costPrice || (matchedProduct?.costPrice) || 0;
+      if (itemCost > 0) return itemSum + ((item.price || 0) - itemCost) * (item.qty || item.quantity || 1);
+      return itemSum;
+    }, 0);
+  }, 0);
 
   const revenueData = useMemo(() => {
     const last7Days = [...Array(7)].map((_, i) => {
@@ -52,9 +80,10 @@ export default function Dashboard() {
         return orderDate === day && o.status === 'delivered';
       });
       const dayRevenue = dayOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
-      return { name: day, value: dayRevenue };
+      const dayProfit = calcProfitForOrders(dayOrders);
+      return { name: day, value: dayRevenue, profit: dayProfit };
     });
-  }, [orders]);
+  }, [orders, products]);
 
   // Monthly revenue (last 12 months)
   const monthlyRevenueData = useMemo(() => {
@@ -71,9 +100,10 @@ export default function Dashboard() {
         return orderDate.getFullYear() === month.date.getFullYear() && orderDate.getMonth() === month.date.getMonth();
       });
       const monthRevenue = monthOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
-      return { name: month.name, value: monthRevenue };
+      const monthProfit = calcProfitForOrders(monthOrders);
+      return { name: month.name, value: monthRevenue, profit: monthProfit };
     });
-  }, [orders]);
+  }, [orders, products]);
 
   // Yearly revenue (last 5 years)
   const yearlyRevenueData = useMemo(() => {
@@ -89,9 +119,10 @@ export default function Dashboard() {
         return orderDate.getFullYear() === yearObj.year;
       });
       const yearRevenue = yearOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
-      return { name: yearObj.name, value: yearRevenue };
+      const yearProfit = calcProfitForOrders(yearOrders);
+      return { name: yearObj.name, value: yearRevenue, profit: yearProfit };
     });
-  }, [orders]);
+  }, [orders, products]);
 
   // Get data based on selected period
   const chartData = timePeriod === 'weekly' ? revenueData : timePeriod === 'monthly' ? monthlyRevenueData : yearlyRevenueData;
@@ -328,7 +359,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <button 
           onClick={() => navigate('/admin/products')}
           className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm text-left hover:border-[#1CA672] hover:shadow-md transition-all active:scale-95 group"
@@ -338,6 +369,18 @@ export default function Dashboard() {
           </div>
           <p className="text-gray-500 text-sm font-semibold mb-1">Total Products</p>
           <h3 className="text-2xl font-black text-gray-900">{products.length}</h3>
+        </button>
+
+        <button 
+          onClick={() => navigate('/admin/products')}
+          className="bg-gradient-to-br from-[#1CA672]/10 to-[#158F5F]/10 p-5 rounded-2xl border border-[#1CA672]/20 shadow-sm text-left hover:border-[#1CA672] hover:shadow-md transition-all active:scale-95 group relative overflow-hidden"
+        >
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-[#1CA672]/10 rounded-full blur-2xl"></div>
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform">
+            <TrendingUp className="text-[#1CA672]" size={20} />
+          </div>
+          <p className="text-[#1CA672] text-sm font-bold mb-1">Net Profit</p>
+          <h3 className="text-2xl font-black text-gray-900">{formatPrice(totalProfit)}</h3>
         </button>
 
         <button 
@@ -493,13 +536,7 @@ export default function Dashboard() {
             <div className="flex gap-1.5 flex-wrap justify-center">
               {chartData.map((item, i) => {
                 const colors = [
-                  'bg-blue-500',
-                  'bg-purple-500',
-                  'bg-pink-500',
-                  'bg-orange-500',
-                  'bg-green-500',
-                  'bg-cyan-500',
-                  'bg-indigo-500'
+                  'bg-blue-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-green-500', 'bg-cyan-500', 'bg-indigo-500'
                 ];
                 return (
                   <div key={item.name} className="flex items-center gap-1.5">
@@ -508,6 +545,73 @@ export default function Dashboard() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </div>
+
+        {/* Profit Chart with Time Period Toggle */}
+        <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-bold text-gray-900 flex items-center gap-2">
+              <TrendingUp size={18} className="text-green-600" />
+              Net Profit
+            </h3>
+            <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setTimePeriod('weekly')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${timePeriod === 'weekly' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              >
+                Weekly
+              </button>
+              <button
+                onClick={() => setTimePeriod('monthly')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${timePeriod === 'monthly' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setTimePeriod('yearly')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${timePeriod === 'yearly' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              >
+                Yearly
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-end justify-between gap-2.5 pb-4 border-b border-gray-200 relative px-2" style={{ height: '280px' }}>
+            {chartData.map((day, i) => {
+              const maxVal = Math.max(...chartData.map(d => d.profit), 1);
+              const heightPercent = (day.profit / maxVal) * 100;
+              const heightPx = (heightPercent / 100) * 280;
+              const barColor = 'from-green-400 to-emerald-600';
+              return (
+                <div key={i} className="flex-1 flex flex-col justify-end items-center group relative h-full">
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[11px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 whitespace-nowrap transition-all duration-200 z-20 font-semibold shadow-lg">
+                    {formatPrice(day.profit)}
+                  </div>
+                  <div
+                    className={`w-full bg-gradient-to-t ${barColor} rounded-t-lg shadow-md group-hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden group-hover:scale-y-105`}
+                    style={{
+                      height: `${heightPx}px`,
+                      minHeight: '2px'
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                  </div>
+                  <span className="text-[11px] font-bold text-gray-600 mt-3 group-hover:text-gray-900 transition-colors whitespace-nowrap">
+                    {day.name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 pt-2 flex justify-center">
+            <div className="flex gap-1.5 flex-wrap justify-center">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-sm" />
+                <span className="text-[10px] font-semibold text-gray-500">Realized Profit</span>
+              </div>
             </div>
           </div>
         </div>

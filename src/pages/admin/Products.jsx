@@ -21,7 +21,7 @@ export default function Products() {
   const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: '', categoryId: 1, price: '', originalPrice: '', discount: 0,
+    name: '', categoryId: 1, price: '', originalPrice: '', costPrice: '', discount: 0,
     image: 'https://picsum.photos/seed/new/400/400', weight: '1', unit: 'kg',
     description: '', brand: '', tags: '', inStock: true, stock: 100
   });
@@ -65,6 +65,7 @@ export default function Products() {
       categoryId: Number(formData.categoryId),
       price: Number(formData.price),
       originalPrice: Number(formData.originalPrice) || Number(formData.price),
+      costPrice: Number(formData.costPrice) || 0,
       discount: Number(formData.discount),
       stock: formData.stock === '' || formData.stock === null || formData.stock === undefined ? null : Number(formData.stock),
       inStock: formData.inStock
@@ -118,7 +119,7 @@ export default function Products() {
           onClick={() => {
             setEditingProduct(null);
             setFormData({
-              name: '', categoryId: 1, price: '', originalPrice: '', discount: 0,
+              name: '', categoryId: 1, price: '', originalPrice: '', costPrice: '', discount: 0,
               image: 'https://picsum.photos/seed/new/400/400', weight: '1', unit: 'kg',
               description: '', brand: '', tags: '', inStock: true, stock: 100
             });
@@ -172,7 +173,7 @@ export default function Products() {
                 <th className="p-4 w-12 text-center"><input type="checkbox" className="rounded" /></th>
                 <th className="p-4">Product</th>
                 <th className="p-4">Category</th>
-                <th className="p-4">Price</th>
+                <th className="p-4">Price/Margin</th>
                 <th className="p-4">Stock</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -202,6 +203,7 @@ export default function Products() {
                   <td className="p-4">
                     <p className="font-bold text-gray-900">{formatPrice(p.price)}</p>
                     {p.discount > 0 && <p className="text-xs text-red-500 line-through">{formatPrice(p.originalPrice)}</p>}
+                    {p.costPrice > 0 && <p className="text-xs font-bold text-green-600 mt-0.5">Margin: {formatPrice(p.price - p.costPrice)}</p>}
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col gap-1">
@@ -268,9 +270,13 @@ export default function Products() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Price (₹) *</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Cost (₹)</label>
+                  <input type="number" value={formData.costPrice} onChange={(e) => setFormData({...formData, costPrice: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" placeholder="Purchase rate" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Sell (₹) *</label>
                   <input required type="number" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
                 </div>
                 <div>
@@ -282,7 +288,7 @@ export default function Products() {
                   <input type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Discount %</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Dis %</label>
                   <input type="number" value={formData.discount} onChange={(e) => setFormData({...formData, discount: e.target.value})} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none" />
                 </div>
               </div>
