@@ -14,7 +14,7 @@ import { useWishlistStore } from '../store/wishlistStore';
 import toast from 'react-hot-toast';
 import { auth, db } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { collection, query, orderBy, getDocs, getDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, getDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 
 // ── Bottom Sheet Modal Wrapper ──────────────────────────────────────────────
 function BottomSheet({ open, onClose, children }) {
