@@ -143,29 +143,37 @@ export default function Profile() {
       setPushLoading(false);
     }, 5000); 
 
-    try {
-      if (typeof window !== 'undefined' && window.OneSignal) {
-        if (isPushEnabled) {
-          await window.OneSignal.User.PushSubscription.optOut();
-          setIsPushEnabled(false);
-          toast.success('🔕 Notifications band ho gayi');
-        } else {
-          // Agar permission LAREADY allowed hai, toh prompt mat dikhao, sidha ON kardo
-          if (Notification.permission === 'granted') {
-             await window.OneSignal.User.PushSubscription.optIn();
-             toast.success('🔔 Notifications chalu ho gayi!');
-             setIsPushEnabled(true);
+    if (typeof window !== 'undefined') {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          const currentlyOptedIn = OneSignal.User.PushSubscription.optedIn;
+          
+          if (currentlyOptedIn) {
+            await OneSignal.User.PushSubscription.optOut();
+            setIsPushEnabled(false);
+            toast.success('🔕 Notifications band ho gayi');
           } else {
-             await window.OneSignal.Slidedown.promptPush();
+            if (Notification.permission === 'granted') {
+               await OneSignal.User.PushSubscription.optIn();
+               setIsPushEnabled(true);
+               toast.success('🔔 Notifications chalu ho gayi!');
+            } else if (Notification.permission === 'denied') {
+               toast.error('❌ Browser Lock (🔒) icon mein notification allow karein.');
+            } else {
+               await OneSignal.Slidedown.promptPush({ force: true });
+               toast('Screen par OneSignal ka message check karein', { icon: '👀' });
+            }
           }
+        } catch (err) {
+          console.error('Push toggle error:', err);
+          toast.error('Error: ' + err.message);
+        } finally {
+          clearTimeout(safetyTimeout);
+          setPushLoading(false);
         }
-      } else {
-        toast.error('G Mart notifications load ho rahe hain. Page refresh karein.');
-      }
-    } catch (err) {
-      console.error('Push toggle error:', err);
-      alert('Error popup block by browser: ' + (err.message || 'Apne browser header mein notification ON karein.'));
-    } finally {
+      });
+    } else {
       clearTimeout(safetyTimeout);
       setPushLoading(false);
     }
