@@ -15,6 +15,7 @@ export default function AdminNotifications() {
   const [targetType, setTargetType] = useState('all'); // 'all' or 'specific'
   const [selectedUserUid, setSelectedUserUid] = useState('');
   const [selectedUserName, setSelectedUserName] = useState('');
+  const [selectedUserPhone, setSelectedUserPhone] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [isSending, setIsSending] = useState(false);
 
@@ -71,13 +72,7 @@ export default function AdminNotifications() {
           message,
           type,
           target: targetType === 'all' ? 'All Users' : selectedUserName,
-          createdAt: new Date().toISOString()
-        });
-
-        toast.success(`✅ Push Bhej Diya Gaya!`);
-        setTitle('');
-        setMessage('');
-        setSelectedUserUid('');
+            phone: targetType === 'all' ? null : selectedUserPhone,
         setSelectedUserName('');
         setUserSearch('');
       } else {
@@ -163,8 +158,7 @@ export default function AdminNotifications() {
                                 return;
                               }
                               setSelectedUserUid(user.uid);
-                              setSelectedUserName(user.fullName || user.name || user.phone);
-                              setUserSearch('');
+                              setSelectedUserName(user.fullName || user.name || user.phone);                                setSelectedUserPhone(user.phone || '');                              setUserSearch('');
                             }}
                             className={`w-full flex items-center justify-between p-3 hover:bg-green-50 transition-colors ${selectedUserUid === user.uid ? 'bg-green-50' : ''}`}
                           >
