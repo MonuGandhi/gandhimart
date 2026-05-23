@@ -28,6 +28,8 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [deliveryBoys, setDeliveryBoys] = useState([]);
+  const [udhaarConfirmData, setUdhaarConfirmData] = useState(null);
+  const [isAddingUdhaar, setIsAddingUdhaar] = useState(false);
 
 
   const filteredOrders = useMemo(() => orders.filter(o => {
@@ -122,32 +124,14 @@ export default function Orders() {
     }
   };
 
-  const handleAddToUdhaar = async (order) => {
-    if (!order?.id) return;
+  const confirmAddToUdhaar = async () => {
+    if (!udhaarConfirmData?.order?.id || isAddingUdhaar) return;
 
-    if (order.udhaarAdded) {
-      toast('This order is already added to udhaar.', { icon: 'ℹ️' });
-      return;
-    }
+    setIsAddingUdhaar(true);
 
-    const customerName = getCustomerName(order);
-    const customerPhone = getCustomerPhone(order);
-    const amount = getOrderTotal(order);
-
-    if (!customerPhone) {
-      toast.error('Customer phone number not found for this order');
-      return;
-    }
-
-    if (amount <= 0) {
-      toast.error('Invalid order amount for udhaar');
-      return;
-    }
-
-    const confirmed = window.confirm(`Kya aap ${customerName} ka ₹${amount} udhaar mein add karna chahte hain?`);
-    if (!confirmed) return;
-
+    const { order, customerName, customerPhone, amount } = udhaarConfirmData;
     const todayDate = new Date().toISOString().split('T')[0];
+    if (!order?.id) return;
     const loadingToast = toast.loading('Udhaar mein add kiya ja raha hai...');
     try {
       const udhaarRef = await addDoc(collection(db, 'udhaars'), {
@@ -180,10 +164,43 @@ export default function Orders() {
         : prev));
 
       toast.success(`₹${amount} udhaar mein add ho gaya`, { id: loadingToast });
+      setUdhaarConfirmData(null);
     } catch (err) {
       console.error('Udhaar add error:', err);
       toast.error(`Udhaar add failed: ${err.message}`, { id: loadingToast });
+    } finally {
+      setIsAddingUdhaar(false);
     }
+  };
+
+  const handleAddToUdhaar = async (order) => {
+    if (!order?.id) return;
+
+    if (order.udhaarAdded) {
+      toast('This order is already added to udhaar.', { icon: 'ℹ️' });
+      return;
+    }
+
+    const customerName = getCustomerName(order);
+    const customerPhone = getCustomerPhone(order);
+    const amount = getOrderTotal(order);
+
+    if (!customerPhone) {
+      toast.error('Customer phone number not found for this order');
+      return;
+    }
+
+    if (amount <= 0) {
+      toast.error('Invalid order amount for udhaar');
+      return;
+    }
+
+    setUdhaarConfirmData({
+      order,
+      customerName,
+      customerPhone,
+      amount
+    });
   };
 
   const exportCSV = () => {
@@ -642,6 +659,50 @@ export default function Orders() {
             </div>
           </div>
         </>
+      )}
+
+      {udhaarConfirmData && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+            onClick={() => !isAddingUdhaar && setUdhaarConfirmData(null)}
+          />
+          <div className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-emerald-200 bg-white animate-[fadeIn_.2s_ease-out]">
+            <div className="bg-gradient-to-r from-emerald-600 via-[#1CA672] to-lime-500 p-5 text-white">
+              <p className="text-xs font-black uppercase tracking-[0.2em] opacity-90">Udhaar Confirmation</p>
+              <h3 className="text-2xl font-black mt-1">Confirm Entry</h3>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-[15px] text-gray-800 font-semibold leading-relaxed">
+                Kya aap <span className="text-emerald-700 font-black">{udhaarConfirmData.customerName}</span> ka{' '}
+                <span className="text-emerald-700 font-black">₹{udhaarConfirmData.amount}</span> udhaar mein add karna chahte hain?
+              </p>
+
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-sm space-y-1">
+                <p><span className="font-bold text-gray-700">Phone:</span> <span className="font-semibold text-gray-900">{udhaarConfirmData.customerPhone}</span></p>
+                <p><span className="font-bold text-gray-700">Order ID:</span> <span className="font-semibold text-gray-900">#{udhaarConfirmData.order.id}</span></p>
+              </div>
+
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  onClick={() => setUdhaarConfirmData(null)}
+                  disabled={isAddingUdhaar}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-black hover:bg-gray-100 transition-colors disabled:opacity-60"
+                >
+                  No
+                </button>
+                <button
+                  onClick={confirmAddToUdhaar}
+                  disabled={isAddingUdhaar}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-black hover:bg-emerald-700 transition-colors disabled:opacity-60"
+                >
+                  {isAddingUdhaar ? 'Adding...' : 'Yes, Add'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
