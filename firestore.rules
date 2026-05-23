@@ -91,6 +91,11 @@ service cloud.firestore {
       allow write: if hasAdminAccess();
     }
 
+    // Udhaar entries: only admins can read/write
+    match /udhaars/{docId} {
+      allow read, write: if hasAdminAccess();
+    }
+
     // Referral codes: anyone can read to validate, any user can create/update
     match /referral_codes/{code} {
       allow read: if true;

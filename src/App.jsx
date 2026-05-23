@@ -34,6 +34,7 @@ import Reviews from './pages/admin/Reviews';
 import Settings from './pages/admin/Settings';
 import StoreStatus from './pages/admin/StoreStatus';
 import LayoutManager from './pages/admin/LayoutManager';
+import Udhaars from './pages/admin/Udhaars';
 import { Navigate } from 'react-router-dom';
 
 import { useAuthStore } from './store/authStore';
@@ -206,6 +207,7 @@ const AppContent = () => {
             <Route path="products" element={<Products />} />
             <Route path="categories" element={<Categories />} />
             <Route path="orders" element={<OrdersAdmin />} />
+            <Route path="udhaars" element={<Udhaars />} />
             <Route path="coupons" element={<Coupons />} />
             <Route path="special-offers" element={<SpecialOffers />} />
             <Route path="customers" element={<Customers />} />

@@ -5,7 +5,7 @@ import { useNotificationStore } from '../../store/notificationsStore';
 import { formatPrice } from '../../utils/helpers';
 import toast from 'react-hot-toast';
 import { db } from '../../firebase';
-import { doc, updateDoc, increment, query, collection, where, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, increment, query, collection, where, getDocs, addDoc } from 'firebase/firestore';
 import { logWalletTransaction } from '../../utils/wallet';
 
 // Helper function to restore stock when order is cancelled
@@ -51,6 +51,10 @@ export default function Orders() {
   };
 
   const [referrerInfo, setReferrerInfo] = useState(null);
+
+  const getCustomerName = (order) => order.deliveryAddress?.fullName || order.address?.name || order.customerName || 'Customer';
+  const getCustomerPhone = (order) => order.deliveryAddress?.phone || order.address?.phone || order.phone || '';
+  const getOrderTotal = (order) => Number(order.totalAmount || order.total || 0);
 
   const handleStatusChange = async (orderId, newStatus) => {
     const order = orders.find(o => o.id === orderId);
@@ -115,6 +119,70 @@ export default function Orders() {
     } catch (err) {
       console.error(err);
       toast.error(`Error: ${err.message}`, { id: loadingToast });
+    }
+  };
+
+  const handleAddToUdhaar = async (order) => {
+    if (!order?.id) return;
+
+    if (order.udhaarAdded) {
+      toast('This order is already added to udhaar.', { icon: 'ℹ️' });
+      return;
+    }
+
+    const customerName = getCustomerName(order);
+    const customerPhone = getCustomerPhone(order);
+    const amount = getOrderTotal(order);
+
+    if (!customerPhone) {
+      toast.error('Customer phone number not found for this order');
+      return;
+    }
+
+    if (amount <= 0) {
+      toast.error('Invalid order amount for udhaar');
+      return;
+    }
+
+    const confirmed = window.confirm(`Kya aap ${customerName} ka ₹${amount} udhaar mein add karna chahte hain?`);
+    if (!confirmed) return;
+
+    const todayDate = new Date().toISOString().split('T')[0];
+    const loadingToast = toast.loading('Udhaar mein add kiya ja raha hai...');
+    try {
+      const udhaarRef = await addDoc(collection(db, 'udhaars'), {
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        order_id: order.id,
+        amount,
+        date: todayDate,
+        created_at: new Date().toISOString(),
+        status: 'pending'
+      });
+
+      await updateDoc(doc(db, 'orders', order.id), {
+        udhaarAdded: true,
+        udhaarAmount: amount,
+        udhaarId: udhaarRef.id,
+        udhaarDate: todayDate,
+        udhaarStatus: 'pending'
+      });
+
+      setSelectedOrder((prev) => (prev?.id === order.id
+        ? {
+            ...prev,
+            udhaarAdded: true,
+            udhaarAmount: amount,
+            udhaarId: udhaarRef.id,
+            udhaarDate: todayDate,
+            udhaarStatus: 'pending'
+          }
+        : prev));
+
+      toast.success(`₹${amount} udhaar mein add ho gaya`, { id: loadingToast });
+    } catch (err) {
+      console.error('Udhaar add error:', err);
+      toast.error(`Udhaar add failed: ${err.message}`, { id: loadingToast });
     }
   };
 
@@ -296,6 +364,11 @@ export default function Orders() {
                     <p className="font-bold text-gray-900">#{o.id}</p>
                     <p className="text-xs text-gray-500">{new Date(o.placedAt).toLocaleString()}</p>
                     <p className="text-xs text-gray-500 mt-1">{o.items?.length || 0} items</p>
+                    {o.udhaarAdded && (
+                      <span className="inline-flex mt-2 bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-black">
+                        Udhaar ✓
+                      </span>
+                    )}
                   </td>
                   <td className="p-4">
                     <p className="font-bold text-gray-900">{o.deliveryAddress?.fullName || o.address?.name || 'N/A'}</p>
@@ -345,7 +418,14 @@ export default function Orders() {
           <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setSelectedOrder(null)} />
           <div className="fixed inset-y-0 right-0 w-full md:w-[400px] bg-white shadow-2xl z-50 transform transition-transform duration-300 translate-x-0 flex flex-col">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-              <h2 className="text-lg font-black text-gray-900">Order #{selectedOrder.id}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-gray-900">Order #{selectedOrder.id}</h2>
+                {selectedOrder.udhaarAdded && (
+                  <span className="bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-black">
+                    Udhaar ✓
+                  </span>
+                )}
+              </div>
               <button onClick={() => setSelectedOrder(null)} className="p-2 text-gray-400 hover:bg-gray-200 rounded-full"><X size={20}/></button>
             </div>
             
@@ -409,6 +489,13 @@ export default function Orders() {
                     </div>
                   )}
                 </div>
+                <button
+                  onClick={() => handleAddToUdhaar(selectedOrder)}
+                  disabled={selectedOrder.udhaarAdded}
+                  className={`mt-3 w-full py-2.5 rounded-lg font-black text-sm transition-all ${selectedOrder.udhaarAdded ? 'bg-emerald-100 text-emerald-700 border border-emerald-200 cursor-not-allowed' : 'bg-amber-500 text-white hover:bg-amber-600'}`}
+                >
+                  {selectedOrder.udhaarAdded ? 'Udhaar ✓ Added' : 'Udhaar Mein Add Karo'}
+                </button>
               </div>
 
               {/* Referral & App Info */}

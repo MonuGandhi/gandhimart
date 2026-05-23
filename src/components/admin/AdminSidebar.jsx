@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings, LogOut, Image as ImageIcon, Bell, Palette, Power, Star, LayoutGrid, Gift } from 'lucide-react';
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings, LogOut, Image as ImageIcon, Bell, Palette, Power, Star, LayoutGrid, Gift, Landmark } from 'lucide-react';
 import { useAdminStore } from '../../store/adminStore';
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { name: 'Products', path: '/admin/products', icon: Package },
   { name: 'Categories', path: '/admin/categories', icon: FolderTree },
   { name: 'Orders', path: '/admin/orders', icon: ShoppingBag },
+  { name: 'Udhaar', path: '/admin/udhaars', icon: Landmark },
   { name: 'Coupons', path: '/admin/coupons', icon: TicketPercent },
   { name: 'Special Offers', path: '/admin/special-offers', icon: Gift },
   { name: 'Banners', path: '/admin/banners', icon: ImageIcon },
