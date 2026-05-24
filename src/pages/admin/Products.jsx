@@ -164,82 +164,109 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-semibold">
-                <th className="p-4 w-12 text-center"><input type="checkbox" className="rounded" /></th>
-                <th className="p-4">Product</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Price/Margin</th>
-                <th className="p-4">Stock</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredProducts.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="p-4 text-center"><input type="checkbox" className="rounded" /></td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={getOptimizedImageUrl(p.image, 100)} 
-                        className="w-12 h-12 rounded-lg object-cover bg-gray-100" 
-                        alt={p.name} 
-                        loading="lazy"
-                        onError={(e) => { e.target.src = `https://picsum.photos/seed/${p.id}/400/400`; }} 
-                      />
-                      <div>
-                        <p className="font-bold text-gray-900">{p.name}</p>
-                        <p className="text-xs text-gray-500">{p.weight} {p.unit} • {p.brand}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-sm text-gray-600">
-                    {categories.find(c => c.id === p.categoryId)?.name || 'Unknown'}
-                  </td>
-                  <td className="p-4">
-                    <p className="font-bold text-gray-900">{formatPrice(p.price)}</p>
-                    {p.discount > 0 && <p className="text-xs text-red-500 line-through">{formatPrice(p.originalPrice)}</p>}
-                    {p.costPrice > 0 && <p className="text-xs font-bold text-green-600 mt-0.5">Margin: {formatPrice(p.price - p.costPrice)}</p>}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex flex-col gap-1">
-                      <button 
-                        onClick={() => toggleStock(p)}
-                        className={`px-2.5 py-1 text-xs font-bold rounded-full border w-fit transition-colors ${
-                          (p.inStock && (p.stock === null || p.stock === undefined || p.stock === "" || Number(p.stock) >= 10)) 
-                            ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' 
-                            : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
-                        }`}
-                      >
-                        {(p.inStock && (p.stock === null || p.stock === undefined || p.stock === "" || Number(p.stock) >= 10)) ? 'In Stock' : 'Out of Stock'}
-                      </button>
-                      <span className={`text-xs font-semibold ${p.stock !== null && p.stock !== undefined && p.stock !== "" && Number(p.stock) < 10 ? 'text-red-500 font-bold' : 'text-gray-500'}`}>
-                        Qty: {p.stock !== null && p.stock !== undefined && p.stock !== "" ? p.stock : '∞'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <a href={`/product/${p.id}`} target="_blank" rel="noreferrer" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
-                        <Eye size={18} />
-                      </a>
-                      <button onClick={() => openEdit(p)} className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors">
-                        <Edit size={18} />
-                      </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Products grouped by Category */}
+      <div className="space-y-6">
+        {/** Group products by category id **/}
+        {(() => {
+          const map = new Map();
+          filteredProducts.forEach(p => {
+            const cid = p.categoryId ?? 'uncategorized';
+            if (!map.has(cid)) map.set(cid, []);
+            map.get(cid).push(p);
+          });
+          const groups = [];
+          const categoryOrder = categories.map(c => c.id);
+          categoryOrder.forEach(cid => {
+            if (map.has(cid)) groups.push({ id: cid, name: categories.find(c => c.id === cid)?.name || 'Unknown', products: map.get(cid) });
+            map.delete(cid);
+          });
+          map.forEach((prods, cid) => {
+            groups.push({ id: cid, name: cid === 'uncategorized' ? 'Uncategorized' : (categories.find(c => c.id === cid)?.name || 'Unknown'), products: prods });
+          });
+          return groups.map(group => (
+            <div key={String(group.id)} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-gray-900">{group.name}</h3>
+                  <p className="text-xs text-gray-500">{group.products.length} items</p>
+                </div>
+                <div className="text-sm text-gray-500">Category ID: {String(group.id)}</div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                      <th className="p-4 w-12 text-center"><input type="checkbox" className="rounded" /></th>
+                      <th className="p-4">Product</th>
+                      <th className="p-4">Price/Margin</th>
+                      <th className="p-4">Stock</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {group.products.map((p) => (
+                      <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="p-4 text-center"><input type="checkbox" className="rounded" /></td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={getOptimizedImageUrl(p.image, 100)} 
+                              className="w-12 h-12 rounded-lg object-cover bg-gray-100" 
+                              alt={p.name} 
+                              loading="lazy"
+                              onError={(e) => { e.target.src = `https://picsum.photos/seed/${p.id}/400/400`; }} 
+                            />
+                            <div>
+                              <p className="font-bold text-gray-900">{p.name}</p>
+                              <p className="text-xs text-gray-500">{p.weight} {p.unit} • {p.brand}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <p className="font-bold text-gray-900">{formatPrice(p.price)}</p>
+                          {p.discount > 0 && <p className="text-xs text-red-500 line-through">{formatPrice(p.originalPrice)}</p>}
+                          {p.costPrice > 0 && <p className="text-xs font-bold text-green-600 mt-0.5">Margin: {formatPrice(p.price - p.costPrice)}</p>}
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-col gap-1">
+                            <button 
+                              onClick={() => toggleStock(p)}
+                              className={`px-2.5 py-1 text-xs font-bold rounded-full border w-fit transition-colors ${
+                                (p.inStock && (p.stock === null || p.stock === undefined || p.stock === "" || Number(p.stock) >= 10)) 
+                                  ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' 
+                                  : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
+                              }`}
+                            >
+                              {(p.inStock && (p.stock === null || p.stock === undefined || p.stock === "" || Number(p.stock) >= 10)) ? 'In Stock' : 'Out of Stock'}
+                            </button>
+                            <span className={`text-xs font-semibold ${p.stock !== null && p.stock !== undefined && p.stock !== "" && Number(p.stock) < 10 ? 'text-red-500 font-bold' : 'text-gray-500'}`}>
+                              Qty: {p.stock !== null && p.stock !== undefined && p.stock !== "" ? p.stock : '∞'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <a href={`/product/${p.id}`} target="_blank" rel="noreferrer" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                              <Eye size={18} />
+                            </a>
+                            <button onClick={() => openEdit(p)} className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors">
+                              <Edit size={18} />
+                            </button>
+                            <button onClick={() => handleDelete(p.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))
+        })()}
+
         {filteredProducts.length === 0 && (
           <div className="p-8 text-center text-gray-500">
             No products found matching your filters.
@@ -424,105 +451,77 @@ export default function Products() {
                       toast.success('Variants generated! 🪄');
                     }}
                     className="text-[10px] font-black bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    🪄 AUTO-GENERATE (kg/L)
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {(formData.variants || []).map((variant, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                      <div className="flex-1 grid grid-cols-5 gap-2">
-                        <div>
-                          <label className="text-[9px] font-bold text-gray-400 block mb-1">Weight</label>
-                          <input 
-                            type="text" 
-                            value={variant.weight || ''} 
-                            onChange={(e) => {
-                              const v = [...formData.variants];
-                              v[idx].weight = e.target.value;
-                              setFormData({...formData, variants: v});
-                            }}
-                            className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
-                          />
+                  >Auto-generate</button>
+                    {(formData.variants || []).map((variant, idx) => (
+                      <div key={variant.id || idx} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
+                        <div className="flex-1 grid grid-cols-4 gap-3">
+                          <div>
+                            <label className="text-[9px] font-bold text-gray-400 block mb-1">Weight</label>
+                            <input
+                              type="text"
+                              value={variant.weight}
+                              onChange={(e) => { const v = [...(formData.variants || [])]; v[idx].weight = e.target.value; setFormData({...formData, variants: v}); }}
+                              className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-bold text-gray-400 block mb-1">Unit</label>
+                            <select
+                              value={variant.unit}
+                              onChange={(e) => { const v = [...(formData.variants || [])]; v[idx].unit = e.target.value; setFormData({...formData, variants: v}); }}
+                              className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
+                            >
+                              <option value="g">g</option>
+                              <option value="kg">kg</option>
+                              <option value="ml">ml</option>
+                              <option value="L">L</option>
+                              <option value="pcs">pcs</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-bold text-gray-400 block mb-1">Price</label>
+                            <input
+                              type="number"
+                              value={variant.price ?? ''}
+                              onChange={(e) => { const v = [...(formData.variants || [])]; v[idx].price = e.target.value === '' ? '' : Number(e.target.value); setFormData({...formData, variants: v}); }}
+                              className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-bold text-gray-400 block mb-1">Stock</label>
+                            <input
+                              type="number"
+                              value={variant.stock !== undefined && variant.stock !== null ? variant.stock : ''}
+                              onChange={(e) => { const v = [...(formData.variants || [])]; v[idx].stock = e.target.value === '' ? '' : Number(e.target.value); setFormData({...formData, variants: v}); }}
+                              placeholder="∞"
+                              className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-gray-400 block mb-1">Unit</label>
-                          <select 
-                            value={variant.unit || 'g'} 
-                            onChange={(e) => {
-                              const v = [...formData.variants];
-                              v[idx].unit = e.target.value;
-                              setFormData({...formData, variants: v});
-                            }}
-                            className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
-                          >
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="ml">ml</option>
-                            <option value="L">L</option>
-                            <option value="pcs">pcs</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-gray-400 block mb-1">Price (₹)</label>
-                          <input 
-                            type="number" 
-                            value={variant.price || ''} 
-                            onChange={(e) => {
-                              const v = [...formData.variants];
-                              v[idx].price = Number(e.target.value);
-                              setFormData({...formData, variants: v});
-                            }}
-                            className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[9px] font-bold text-gray-400 block mb-1">Stock</label>
-                          <input 
-                            type="number" 
-                            value={variant.stock !== undefined && variant.stock !== null ? variant.stock : ''} 
-                            onChange={(e) => {
-                              const v = [...formData.variants];
-                              v[idx].stock = e.target.value === '' ? '' : Number(e.target.value);
-                              setFormData({...formData, variants: v});
-                            }}
-                            placeholder="∞"
-                            className="w-full bg-white border border-gray-100 rounded-lg px-2 py-1 text-xs font-bold"
-                          />
-                        </div>
-                        <div>
+                        <div className="w-28">
                           <label className="text-[9px] font-bold text-gray-400 block mb-1">Status</label>
-                          <button 
+                          <button
                             type="button"
-                            onClick={() => {
-                              const v = [...formData.variants];
-                              v[idx].inStock = !v[idx].inStock;
-                              setFormData({...formData, variants: v});
-                            }}
+                            onClick={() => { const v = [...(formData.variants || [])]; v[idx].inStock = !v[idx].inStock; setFormData({...formData, variants: v}); }}
                             className={`w-full py-1 text-[9px] font-black rounded-lg transition-colors ${variant.inStock ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}
                           >
                             {variant.inStock ? 'IN' : 'OUT'}
                           </button>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => { const v = (formData.variants || []).filter((_, i) => i !== idx); setFormData({...formData, variants: v}); }}
+                          className="p-2 text-gray-300 hover:text-red-500"
+                        >
+                          ✕
+                        </button>
                       </div>
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          const v = formData.variants.filter((_, i) => i !== idx);
-                          setFormData({...formData, variants: v});
-                        }}
-                        className="p-2 text-gray-300 hover:text-red-500"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                  
-                  {(!formData.variants || formData.variants.length === 0) && (
-                    <p className="text-xs text-gray-400 italic text-center py-2">No variants added yet. Use auto-generate or add manually.</p>
-                  )}
-                  
+                    ))}
+
+                    {(!formData.variants || formData.variants.length === 0) && (
+                      <p className="text-xs text-gray-400 italic text-center py-2">No variants added yet. Use auto-generate or add manually.</p>
+                    )}
+
                   <button 
                     type="button"
                     onClick={() => {
