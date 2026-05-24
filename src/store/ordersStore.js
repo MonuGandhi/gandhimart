@@ -11,7 +11,8 @@ import {
   updateDoc, 
   query, 
   where,
-  increment
+  increment,
+  getDocs
 } from 'firebase/firestore';
 import { logWalletTransaction } from '../utils/wallet';
 import { useAdminStore } from './adminStore';
@@ -127,7 +128,31 @@ export const useOrdersStore = create(
 
       cancelOrder: async (id) => {
         const order = get().orders.find(o => o.id === id);
-        if (!order || !order.customerEmail) return;
+        if (!order) return;
+
+        let email = order.customerEmail || '';
+        if (!email) {
+          const phone = order.deliveryAddress?.phone || order.address?.phone || order.customerPhone;
+          if (phone) {
+            const cleanedPhone = String(phone).replace(/\D/g, '').slice(-10);
+            if (cleanedPhone.length === 10) {
+              try {
+                const qUser = query(collection(db, 'users'), where('phone', '==', cleanedPhone));
+                const userSnap = await getDocs(qUser);
+                if (!userSnap.empty) {
+                  email = userSnap.docs[0].id; // Doc id is lowercase email
+                }
+              } catch (e) {
+                console.error("Fallback cancel email lookup failed", e);
+              }
+            }
+          }
+        }
+
+        if (!email) {
+          toast.error('Could not determine customer email for cancellation');
+          return;
+        }
 
         const baseSteps = order.steps || [
           { key: 'placed', label: 'Order Placed', done: true, time: order.placedAt || new Date().toISOString() },
@@ -172,17 +197,17 @@ export const useOrdersStore = create(
         if (refundAmount > 0) {
           try {
             // This will only work if an Admin/Staff is performing the action
-            await updateDoc(doc(db, 'users', order.customerEmail), {
+            await updateDoc(doc(db, 'users', email), {
               walletBalance: increment(refundAmount)
             });
 
-            await logWalletTransaction(order.customerEmail, refundAmount, 'credit', `Refund for cancelled order #${id}`);
+            await logWalletTransaction(email, refundAmount, 'credit', `Refund for cancelled order #${id}`);
 
             useNotificationStore.getState().addNotification({
               title: 'Order Refunded! 💰',
               message: `₹${refundAmount} has been added back to your wallet.`,
               type: 'promo',
-              email: order.customerEmail,
+              email: email,
               phone: order.deliveryAddress?.phone || order.address?.phone
             });
             toast.success(`₹${refundAmount} refunded to wallet`);
@@ -195,7 +220,7 @@ export const useOrdersStore = create(
               title: 'Refund Processing ⏳',
               message: `Your order #${id} was cancelled. Refund of ₹${refundAmount} will be processed manually by Admin shortly.`,
               type: 'order',
-              email: order.customerEmail,
+              email: email,
               phone: order.deliveryAddress?.phone || order.address?.phone
             });
             toast('Refund will be processed by Admin shortly.', { icon: '⏳' });
@@ -228,13 +253,33 @@ export const useOrdersStore = create(
             steps: updatedSteps
           });
 
+          // Fallback lookup: If order doesn't have customerEmail, query users by phone
+          let email = order.customerEmail || '';
+          if (!email) {
+            const phone = order.deliveryAddress?.phone || order.address?.phone || order.customerPhone;
+            if (phone) {
+              const cleanedPhone = String(phone).replace(/\D/g, '').slice(-10);
+              if (cleanedPhone.length === 10) {
+                try {
+                  const qUser = query(collection(db, 'users'), where('phone', '==', cleanedPhone));
+                  const userSnap = await getDocs(qUser);
+                  if (!userSnap.empty) {
+                    email = userSnap.docs[0].id; // Lowercase email is doc id
+                  }
+                } catch (e) {
+                  console.error("Fallback email lookup failed", e);
+                }
+              }
+            }
+          }
+
           // Trigger notification
           const statusText = stepKey.replace(/_/g, ' ').toUpperCase();
           useNotificationStore.getState().addNotification({
             title: `Order Update: ${statusText}`,
             message: `Your order #${id} is now ${stepKey.replace(/_/g, ' ')}.`,
             type: 'order',
-            email: order.customerEmail,
+            email: email,
             phone: order.deliveryAddress?.phone || order.address?.phone
           });
         } catch (error) {

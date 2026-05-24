@@ -245,7 +245,25 @@ export default function Orders() {
 
     const loadingToast = toast.loading('Processing refund...');
     try {
-      const customerEmail = (order.customerEmail || order.id.split('_')[0])?.toLowerCase();
+      let customerEmail = (order.customerEmail || order.id.split('_')[0])?.toLowerCase();
+      if (!customerEmail) {
+        const phone = order.deliveryAddress?.phone || order.address?.phone || order.customerPhone;
+        if (phone) {
+          const cleanedPhone = String(phone).replace(/\D/g, '').slice(-10);
+          if (cleanedPhone.length === 10) {
+            try {
+              const qUser = query(collection(db, 'users'), where('phone', '==', cleanedPhone));
+              const userSnap = await getDocs(qUser);
+              if (!userSnap.empty) {
+                customerEmail = userSnap.docs[0].id; // Doc id is lowercase email
+              }
+            } catch (e) {
+              console.error("Fallback refund email lookup failed", e);
+            }
+          }
+        }
+      }
+
       if (!customerEmail) throw new Error('Customer email not found');
 
       // 1. Update user's wallet
