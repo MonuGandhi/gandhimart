@@ -5,9 +5,9 @@ import { useWishlistStore } from '../../store/wishlistStore';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Home' },
-  { path: '/orders', icon: ClipboardList, label: 'Orders' },
-  { path: '/wishlist', icon: Heart, label: 'Wishlist' },
   { path: '/cart', icon: ShoppingCart, label: 'Cart' },
+  { path: '/wishlist', icon: Heart, label: 'Wishlist' },
+  { path: '/orders', icon: ClipboardList, label: 'Orders' },
   { path: '/profile', icon: User, label: 'Profile' },
 ];
 
