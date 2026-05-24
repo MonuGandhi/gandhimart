@@ -81,6 +81,14 @@ export default function Orders() {
       console.error("Failed to update status in UI:", err);
       // Detailed error toast already handled in store, fallback here if needed
     }
+    const getOrderLocation = (order) => {
+      const lat = Number(order.deliveryLat);
+      const lng = Number(order.deliveryLng);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return { lat, lng };
+      }
+      return null;
+    };
   };
 
   const handleManualCredit = async (order, force = false) => {
@@ -500,6 +508,29 @@ export default function Orders() {
                   >
                     <MessageCircle size={18} /> Update via WhatsApp
                   </button>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 mb-2">Order Location</h3>
+                <div className="bg-green-50 border border-green-100 p-3 rounded-xl text-sm space-y-2">
+                  {getOrderLocation(selectedOrder) ? (
+                    <>
+                      <p><span className="font-semibold">Latitude:</span> {selectedOrder.deliveryLat}</p>
+                      <p><span className="font-semibold">Longitude:</span> {selectedOrder.deliveryLng}</p>
+                      <button
+                        onClick={() => {
+                          const loc = getOrderLocation(selectedOrder);
+                          if (!loc) return;
+                          window.open(`https://www.google.com/maps?q=${loc.lat},${loc.lng}`, '_blank');
+                        }}
+                        className="w-full bg-[#1CA672] text-white font-bold py-2 rounded-lg hover:bg-[#17905F] transition-colors shadow-sm"
+                      >
+                        Open in Google Maps
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-gray-600">No customer location was saved for this order.</p>
+                  )}
                 </div>
               </div>
 

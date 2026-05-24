@@ -175,9 +175,13 @@ export default function Checkout() {
         if (items.length === 0) { toast.error('Your cart is empty'); return; }
         if (!isAddressComplete) { toast.error('Pehle delivery address fill karo'); setEditingAddress(true); return; }
 
-        // Check location restriction before placing order
+        // Always require fresh device location before placing an order.
+        // If service-area restriction is enabled, we also validate that the
+        // customer is inside the configured delivery area.
         const isLocationRestrictionEnabled = !!storeSettings?.locationService?.enabled;
         try {
+            const currentLocation = await locationService.getCurrentLocation();
+
             if (isLocationRestrictionEnabled) {
                 const settings = storeSettings.locationService || {};
                 locationService.updateServiceArea({
@@ -185,8 +189,6 @@ export default function Checkout() {
                     name: settings.villageName || settings.name || 'My Village',
                 });
 
-                // Force fresh device location at order time to avoid stale-cache bypass
-                const currentLocation = await locationService.getCurrentLocation();
                 const isWithinArea = await locationService.isWithinServiceArea(currentLocation);
 
                 if (!isWithinArea) {
@@ -195,28 +197,31 @@ export default function Checkout() {
                     return;
                 }
             }
-        } catch (locationError) {
-            console.error('Location validation error:', locationError);
-            if (isLocationRestrictionEnabled) {
-                // Try to get permission status if available for better messaging
-                try {
-                    if (navigator.permissions && navigator.permissions.query) {
-                        const perm = await navigator.permissions.query({ name: 'geolocation' });
-                        if (perm.state === 'denied') {
-                            toast.error('Location permission is denied in your browser. Enable it in site settings and try again.');
-                            return;
-                        }
-                    }
-                } catch (permErr) {
-                    console.warn('Permission query failed:', permErr);
-                }
 
-                // Provide more detailed feedback to user
-                const code = locationError?.code || locationError?.name || 'UNKNOWN';
-                const msg = locationError?.message || String(locationError);
-                toast.error(`Location check failed (${code}): ${msg}. Please enable location and retry.`);
+            if (!currentLocation) {
+                toast.error('Location permission is required to place an order.');
                 return;
             }
+        } catch (locationError) {
+            console.error('Location validation error:', locationError);
+            // Try to get permission status if available for better messaging
+            try {
+                if (navigator.permissions && navigator.permissions.query) {
+                    const perm = await navigator.permissions.query({ name: 'geolocation' });
+                    if (perm.state === 'denied') {
+                        toast.error('Location permission is denied in your browser. Enable it in site settings and try again.');
+                        return;
+                    }
+                }
+            } catch (permErr) {
+                console.warn('Permission query failed:', permErr);
+            }
+
+            // Provide more detailed feedback to user
+            const code = locationError?.code || locationError?.name || 'UNKNOWN';
+            const msg = locationError?.message || String(locationError);
+            toast.error(`Location check failed (${code}): ${msg}. Please enable location and retry.`);
+            return;
         }
 
         setLoading(true);
