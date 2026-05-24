@@ -29,7 +29,7 @@ export default function Orders() {
   const deliveryTime = useAdminStore((s) => s.storeSettings?.estimatedDeliveryTime || 10);
 
   const userOrders = orders.filter(o => 
-    o.customerEmail === user?.email
+    o.customerEmail?.toLowerCase() === user?.email?.toLowerCase()
   );
 
   if (!isLoggedIn) return null;

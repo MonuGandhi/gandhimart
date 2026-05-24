@@ -35,6 +35,15 @@ function BottomSheet({ open, onClose, children }) {
   );
 }
 
+// Helper to compare phone numbers safely by matching last 10 digits
+const comparePhones = (phone1, phone2) => {
+  if (!phone1 || !phone2) return false;
+  const p1 = String(phone1).replace(/\D/g, '');
+  const p2 = String(phone2).replace(/\D/g, '');
+  if (p1.length < 10 || p2.length < 10) return p1 === p2;
+  return p1.slice(-10) === p2.slice(-10);
+};
+
 export default function Profile() {
   const navigate = useNavigate();
   const { user, isLoggedIn, login, logout, savedAddresses } = useAuthStore();
@@ -46,7 +55,7 @@ export default function Profile() {
   const wishlistItems = useWishlistStore((s) => s.items);
   const wishlistItemsCount = wishlistItems.length;
   const visibleNotifications = notifications.filter(
-    n => !deletedIds.includes(n.id) && (!n.phone || n.phone === user?.phone)
+    n => !deletedIds.includes(n.id) && (!n.phone || comparePhones(n.phone, user?.phone))
   );
   const unreadNotifications = visibleNotifications.filter(n => !readIds.includes(n.id)).length;
 
@@ -342,9 +351,15 @@ export default function Profile() {
     }
   };
 
-  const userOrders = orders.filter(
-    (o) => (o.deliveryAddress?.phone || o.address?.phone) === user?.phone
-  );
+  const userOrders = orders.filter((o) => {
+    // 1. Email check
+    if (o.customerEmail && user?.email && o.customerEmail.toLowerCase() === user.email.toLowerCase()) {
+      return true;
+    }
+    // 2. Safe Phone number check
+    const orderPhone = o.deliveryAddress?.phone || o.address?.phone || o.phone;
+    return comparePhones(orderPhone, user?.phone);
+  });
 
   // ── Login Screen ────────────────────────────────────────────────────────────
   if (!isLoggedIn) {
