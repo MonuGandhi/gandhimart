@@ -4,8 +4,10 @@ import { useAuthStore } from '../../store/authStore';
 import { useOrdersStore } from '../../store/ordersStore';
 import AdminSidebar from './AdminSidebar';
 import { Menu, Bell } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+
+const ALERT_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
 export default function AdminLayout() {
   const isAdminLoggedIn = useAdminStore((state) => state.isAdminLoggedIn);
@@ -24,19 +26,86 @@ export default function AdminLayout() {
                      localStorage.getItem('gmart_is_pro_admin') === '1';
 
   // Audio & Alert State for New Order
-  const [lastOrderTime, setLastOrderTime] = useState(() => Date.now());
+  const lastOrderTimeRef = useRef(Date.now());
   const [activeAlert, setActiveAlert] = useState(null);
-  const [audioInstance, setAudioInstance] = useState(null);
   const [audioEnabled, setAudioEnabled] = useState(false); // To handle browser auto-play policy
+  const activeAlertRef = useRef(null);
+  const audioInstanceRef = useRef(null);
+  const alertQueueRef = useRef([]);
   const orders = useOrdersStore((state) => state.orders);
+
+  useEffect(() => {
+    activeAlertRef.current = activeAlert;
+  }, [activeAlert]);
+
+  const stopCurrentAudio = () => {
+    const audio = audioInstanceRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audioInstanceRef.current = null;
+    }
+  };
+
+  const playAlertAudio = () => {
+    stopCurrentAudio();
+
+    if (!audioEnabled) return;
+
+    const audio = new Audio(ALERT_SOUND_URL);
+    audio.loop = true;
+    audio.play().catch(e => {
+      console.error('Audio play failed (even after enabled):', e);
+    });
+    audioInstanceRef.current = audio;
+  };
+
+  const showNextAlert = () => {
+    const nextAlert = alertQueueRef.current.shift() || null;
+
+    if (!nextAlert) {
+      setActiveAlert(null);
+      toast.dismiss('new-order-alert');
+      return;
+    }
+
+    setActiveAlert(nextAlert);
+
+    if (audioEnabled) {
+      playAlertAudio();
+    } else {
+      console.warn('New order received but audio is not enabled by user.');
+      toast.error('Audio Disabled! Enable it from top header to hear rings.', { duration: 10000 });
+    }
+
+    toast.error(`NEW ORDER: #${nextAlert.id}`, {
+      id: 'new-order-alert',
+      duration: Infinity,
+      position: 'top-center',
+      style: {
+        background: '#ef4444',
+        color: '#fff',
+        fontSize: '18px',
+        fontWeight: '900',
+        padding: '24px',
+        borderRadius: '24px',
+        border: '4px solid #fff',
+        zIndex: 99999
+      }
+    });
+  };
 
   const enableAudio = () => {
     // Play a silent sound to "unlock" audio on this browser session
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    const audio = new Audio(ALERT_SOUND_URL);
     audio.volume = 0;
     audio.play().then(() => {
       setAudioEnabled(true);
       toast.success('Alerts Enabled! 🔔', { id: 'audio-enabled' });
+
+      if (activeAlertRef.current && !audioInstanceRef.current) {
+        playAlertAudio();
+      }
     }).catch(e => {
       console.error("Audio activation failed:", e);
       toast.error('Click again to enable alerts');
@@ -44,59 +113,42 @@ export default function AdminLayout() {
   };
 
   const stopAlert = () => {
-    if (audioInstance) {
-      audioInstance.pause();
-      // eslint-disable-next-line react-hooks/immutability
-      audioInstance.currentTime = 0;
-    }
+    stopCurrentAudio();
     toast.dismiss('new-order-alert'); // Dismiss the persistent toast
-    setActiveAlert(null);
+    showNextAlert();
   };
 
   useEffect(() => {
     if (orders.length > 0) {
-      const latestOrder = orders[0];
-      const orderTime = new Date(latestOrder.placedAt).getTime();
-      
-      // If there's a new order placed after we loaded the admin panel
-      if (orderTime > lastOrderTime && latestOrder.status === 'placed') {
-        setTimeout(() => {
-          setLastOrderTime(orderTime);
-          setActiveAlert(latestOrder);
-        }, 0);
-        
-        // Persistent Looping Sound
-        if (audioEnabled) {
-          const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-          audio.loop = true;
-          audio.play().catch(e => {
-            console.error("Audio play failed (even after enabled):", e);
-            // Fallback: Just show the big alert
-          });
-          setTimeout(() => setAudioInstance(audio), 0);
-        } else {
-          console.warn("New order received but audio is not enabled by user.");
-          toast.error("Audio Disabled! Enable it from top header to hear rings.", { duration: 10000 });
-        }
-        
-        toast.error(`NEW ORDER: #${latestOrder.id}`, {
-          id: 'new-order-alert',
-          duration: Infinity,
-          position: 'top-center',
-          style: {
-            background: '#ef4444',
-            color: '#fff',
-            fontSize: '18px',
-            fontWeight: '900',
-            padding: '24px',
-            borderRadius: '24px',
-            border: '4px solid #fff',
-            zIndex: 99999
-          }
+      const freshOrders = orders
+        .filter(order => order.status === 'placed')
+        .map(order => ({
+          order,
+          orderTime: new Date(order.placedAt).getTime()
+        }))
+        .filter(({ orderTime }) => orderTime > lastOrderTimeRef.current)
+        .sort((a, b) => a.orderTime - b.orderTime);
+
+      if (freshOrders.length > 0) {
+        lastOrderTimeRef.current = freshOrders[freshOrders.length - 1].orderTime;
+        const currentAlertId = activeAlertRef.current?.id;
+        const existingQueueIds = new Set(alertQueueRef.current.map(item => item.id));
+        const nextQueue = [...alertQueueRef.current];
+
+        freshOrders.forEach(({ order }) => {
+          if (order.id === currentAlertId || existingQueueIds.has(order.id)) return;
+          existingQueueIds.add(order.id);
+          nextQueue.push(order);
         });
+
+        alertQueueRef.current = nextQueue;
+
+        if (!activeAlertRef.current) {
+          showNextAlert();
+        }
       }
     }
-  }, [orders, lastOrderTime, audioEnabled]);
+  }, [orders, audioEnabled]);
 
   // Tag Admin in OneSignal for Push Notifications (Background support)
   useEffect(() => {
