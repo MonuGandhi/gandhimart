@@ -81,14 +81,16 @@ export default function Orders() {
       console.error("Failed to update status in UI:", err);
       // Detailed error toast already handled in store, fallback here if needed
     }
-    const getOrderLocation = (order) => {
-      const lat = Number(order.deliveryLat);
-      const lng = Number(order.deliveryLng);
-      if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        return { lat, lng };
-      }
-      return null;
-    };
+  };
+
+  const getOrderLocation = (order) => {
+    if (!order) return null;
+    const lat = Number(order.deliveryLat);
+    const lng = Number(order.deliveryLng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      return { lat, lng };
+    }
+    return null;
   };
 
   const handleManualCredit = async (order, force = false) => {
