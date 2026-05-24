@@ -37,6 +37,9 @@ import LayoutManager from './pages/admin/LayoutManager';
 import Udhaars from './pages/admin/Udhaars';
 import { Navigate } from 'react-router-dom';
 
+import TrackOrder from './pages/TrackOrder';
+import DeliveryTracker from './pages/DeliveryTracker';
+import ActiveDeliveries from './pages/admin/ActiveDeliveries';
 import { useAuthStore } from './store/authStore';
 
 // Scroll to top component
@@ -190,6 +193,9 @@ const AppContent = () => {
           <Route path="/search" element={<Search />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
+            <Route path="/track-order" element={<TrackOrder />} />
+            <Route path="/delivery-tracker" element={<DeliveryTracker />} />
+            <Route path="/admin/active-deliveries" element={<ActiveDeliveries />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/order/:id" element={<OrderTracking />} />
           <Route path="/orders" element={<Orders />} />

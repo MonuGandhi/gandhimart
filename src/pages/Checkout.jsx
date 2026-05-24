@@ -198,12 +198,23 @@ export default function Checkout() {
         } catch (locationError) {
             console.error('Location validation error:', locationError);
             if (isLocationRestrictionEnabled) {
-                const permissionDenied = locationError?.code === 1 || locationError?.code === 'PERMISSION_DENIED';
-                toast.error(
-                    permissionDenied
-                        ? 'Location permission required to place order. Please allow location access.'
-                        : 'Unable to verify your location. Please try again.'
-                );
+                // Try to get permission status if available for better messaging
+                try {
+                    if (navigator.permissions && navigator.permissions.query) {
+                        const perm = await navigator.permissions.query({ name: 'geolocation' });
+                        if (perm.state === 'denied') {
+                            toast.error('Location permission is denied in your browser. Enable it in site settings and try again.');
+                            return;
+                        }
+                    }
+                } catch (permErr) {
+                    console.warn('Permission query failed:', permErr);
+                }
+
+                // Provide more detailed feedback to user
+                const code = locationError?.code || locationError?.name || 'UNKNOWN';
+                const msg = locationError?.message || String(locationError);
+                toast.error(`Location check failed (${code}): ${msg}. Please enable location and retry.`);
                 return;
             }
         }
@@ -217,6 +228,8 @@ export default function Checkout() {
             console.error('Auto-save address error:', err);
             // Non-blocking error, we still want to place the order
         }
+        // Attach last-known user location (if available) so tracking can use it
+        const finalUserLocation = locationService.userLocation || locationService.getCachedLocation() || null;
         const batch = writeBatch(db);
         const orderId = `GM${Date.now()}`;
         const orderRef = doc(collection(db, 'orders'), orderId);
@@ -242,6 +255,8 @@ export default function Checkout() {
                 placedAt: new Date().toISOString(),
                 referralCode: appliedReferral?.code || null, // ✅ Customer ne jo referral code daala
                 isAppInstalled: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true, // ✅ Check if ordered from PWA
+                deliveryLat: finalUserLocation?.lat || null,
+                deliveryLng: finalUserLocation?.lng || null,
             };
 
             // Add order to batch
