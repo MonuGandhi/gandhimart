@@ -129,7 +129,14 @@ export const useOrdersStore = create(
         const order = get().orders.find(o => o.id === id);
         if (!order || !order.customerEmail) return;
 
-        const updatedSteps = [...order.steps, { key: 'cancelled', label: 'Cancelled by User', done: true, time: new Date().toISOString() }];
+        const baseSteps = order.steps || [
+          { key: 'placed', label: 'Order Placed', done: true, time: order.placedAt || new Date().toISOString() },
+          { key: 'confirmed', label: 'Confirmed', done: false, time: null },
+          { key: 'packing', label: 'Packing', done: false, time: null },
+          { key: 'out_for_delivery', label: 'Out for Delivery', done: false, time: null },
+          { key: 'delivered', label: 'Delivered', done: false, time: null },
+        ];
+        const updatedSteps = [...baseSteps, { key: 'cancelled', label: 'Cancelled by User', done: true, time: new Date().toISOString() }];
 
         // 1. Update Order Status FIRST (Allowed by new rules)
         try {
@@ -201,7 +208,15 @@ export const useOrdersStore = create(
         const order = get().orders.find(o => o.id === id);
         if (!order) return;
 
-        const updatedSteps = order.steps.map((s) =>
+        const baseSteps = order.steps || [
+          { key: 'placed', label: 'Order Placed', done: true, time: order.placedAt || new Date().toISOString() },
+          { key: 'confirmed', label: 'Confirmed', done: false, time: null },
+          { key: 'packing', label: 'Packing', done: false, time: null },
+          { key: 'out_for_delivery', label: 'Out for Delivery', done: false, time: null },
+          { key: 'delivered', label: 'Delivered', done: false, time: null },
+        ];
+
+        const updatedSteps = baseSteps.map((s) =>
           s.key === stepKey ? { ...s, done: true, time: new Date().toISOString() } : s
         );
 

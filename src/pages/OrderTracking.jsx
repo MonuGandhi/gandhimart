@@ -307,41 +307,52 @@ export default function OrderTracking() {
 
              {/* Modern Stepper */}
              <div className="relative pl-1">
-                {order.steps.map((step, index) => {
-                  const Icon = getIcon(step.key);
-                  const isLast = index === order.steps.length - 1;
-                  const isNext = !step.done && (index === 0 || order.steps[index - 1].done);
-                  const styles = getStepStyles(step.key, step.done, isNext);
+                {(() => {
+                  const orderSteps = order.steps || [
+                    { key: 'placed', label: 'Order Placed', done: true, time: order.placedAt },
+                    { key: 'confirmed', label: 'Confirmed', done: ['confirmed', 'packing', 'out_for_delivery', 'delivered'].includes(order.status), time: null },
+                    { key: 'packing', label: 'Packing', done: ['packing', 'out_for_delivery', 'delivered'].includes(order.status), time: null },
+                    { key: 'out_for_delivery', label: 'Out for Delivery', done: ['out_for_delivery', 'delivered'].includes(order.status), time: null },
+                    { key: 'delivered', label: 'Delivered', done: order.status === 'delivered', time: null },
+                    ...(order.status === 'cancelled' ? [{ key: 'cancelled', label: 'Cancelled by User', done: true, time: null }] : [])
+                  ];
 
-                  return (
-                    <div key={step.key} className="relative flex items-start gap-5 mb-9 last:mb-0">
-                      {/* Vertical Line */}
-                      {!isLast && (
-                        <div className={`absolute top-8 left-[13px] w-[3px] h-10 rounded-full ${styles.line}`} />
-                      )}
+                  return orderSteps.map((step, index) => {
+                    const Icon = getIcon(step.key);
+                    const isLast = index === orderSteps.length - 1;
+                    const isNext = !step.done && (index === 0 || orderSteps[index - 1].done);
+                    const styles = getStepStyles(step.key, step.done, isNext);
 
-                      {/* Status Icon */}
-                      <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 border-2 ${styles.bg} text-xs font-bold`}>
-                        {isNext && (
-                          <span className="absolute -inset-1 rounded-full animate-ping bg-current opacity-20 pointer-events-none" />
+                    return (
+                      <div key={step.key} className="relative flex items-start gap-5 mb-9 last:mb-0">
+                        {/* Vertical Line */}
+                        {!isLast && (
+                          <div className={`absolute top-8 left-[13px] w-[3px] h-10 rounded-full ${styles.line}`} />
                         )}
-                        <Icon size={14} strokeWidth={2.5} />
+
+                        {/* Status Icon */}
+                        <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-500 border-2 ${styles.bg} text-xs font-bold`}>
+                          {isNext && (
+                            <span className="absolute -inset-1 rounded-full animate-ping bg-current opacity-20 pointer-events-none" />
+                          )}
+                          <Icon size={14} strokeWidth={2.5} />
+                        </div>
+                        
+                        {/* Text Content */}
+                        <div className={`flex-1 transition-opacity duration-300 ${step.done || isNext ? 'opacity-100' : 'opacity-35'}`}>
+                          <h4 className={`text-sm tracking-tight ${styles.textClass}`}>
+                            {step.label}
+                          </h4>
+                          {step.time ? (
+                            <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-0.5">{formatDate(step.time)}</p>
+                          ) : isNext && (
+                            <p className="text-[10px] font-black text-orange-500 dark:text-orange-400 mt-0.5 animate-pulse">Processing live...</p>
+                          )}
+                        </div>
                       </div>
-                      
-                      {/* Text Content */}
-                      <div className={`flex-1 transition-opacity duration-300 ${step.done || isNext ? 'opacity-100' : 'opacity-35'}`}>
-                        <h4 className={`text-sm tracking-tight ${styles.textClass}`}>
-                          {step.label}
-                        </h4>
-                        {step.time ? (
-                          <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-0.5">{formatDate(step.time)}</p>
-                        ) : isNext && (
-                          <p className="text-[10px] font-black text-orange-500 dark:text-orange-400 mt-0.5 animate-pulse">Processing live...</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
              </div>
           </div>
 
