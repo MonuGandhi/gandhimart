@@ -116,6 +116,7 @@ export default function Orders() {
             title: 'Referral Reward! 🎁',
             message: `You earned ₹10 because your friend's order was delivered!`,
             type: 'promo',
+            email: referrerPhone,
             phone: referrerPhone
           });
         } catch (e) { console.error('Notification failed', e); }
@@ -266,7 +267,8 @@ export default function Orders() {
           title: 'Order Refunded! 💰',
           message: `₹${refundAmount} has been credited back to your wallet for order #${order.id}.`,
           type: 'promo',
-          phone: customerEmail
+          email: customerEmail,
+          phone: order.deliveryAddress?.phone || order.address?.phone
         });
       } catch (e) { console.error('Notification failed', e); }
 

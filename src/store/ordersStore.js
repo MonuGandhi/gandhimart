@@ -182,7 +182,8 @@ export const useOrdersStore = create(
               title: 'Order Refunded! 💰',
               message: `₹${refundAmount} has been added back to your wallet.`,
               type: 'promo',
-              phone: order.customerEmail
+              email: order.customerEmail,
+              phone: order.deliveryAddress?.phone || order.address?.phone
             });
             toast.success(`₹${refundAmount} refunded to wallet`);
           } catch (error) {
@@ -194,7 +195,8 @@ export const useOrdersStore = create(
               title: 'Refund Processing ⏳',
               message: `Your order #${id} was cancelled. Refund of ₹${refundAmount} will be processed manually by Admin shortly.`,
               type: 'order',
-              phone: order.customerEmail
+              email: order.customerEmail,
+              phone: order.deliveryAddress?.phone || order.address?.phone
             });
             toast('Refund will be processed by Admin shortly.', { icon: '⏳' });
           }
@@ -232,6 +234,7 @@ export const useOrdersStore = create(
             title: `Order Update: ${statusText}`,
             message: `Your order #${id} is now ${stepKey.replace(/_/g, ' ')}.`,
             type: 'order',
+            email: order.customerEmail,
             phone: order.deliveryAddress?.phone || order.address?.phone
           });
         } catch (error) {

@@ -10,11 +10,20 @@ export default function Notifications() {
   const { user } = useAuthStore();
   const { notifications, readIds, deletedIds, markAsRead, deleteNotification } = useNotificationStore();
 
-  const visibleNotifications = notifications.filter(
-    n => !deletedIds.includes(n.id) && 
-         (!n.phone || n.phone === user?.phone) &&
-         (!n.email || n.email === user?.email)
-  );
+  const visibleNotifications = notifications.filter(n => {
+    if (deletedIds.includes(n.id)) return false;
+    // If notification has email → only show to that email user
+    if (n.email) return n.email.toLowerCase() === user?.email?.toLowerCase();
+    // If notification has phone but no email → fallback phone match  
+    if (n.phone) {
+      const p1 = String(n.phone).replace(/\D/g, '');
+      const p2 = String(user?.phone || '').replace(/\D/g, '');
+      if (p1.length >= 10 && p2.length >= 10) return p1.slice(-10) === p2.slice(-10);
+      return p1 === p2;
+    }
+    // Global notification (no email, no phone) → show to everyone
+    return true;
+  });
 
 
 

@@ -54,9 +54,15 @@ export default function Profile() {
   const storeSettings = useAdminStore((s) => s.storeSettings) || {};
   const wishlistItems = useWishlistStore((s) => s.items);
   const wishlistItemsCount = wishlistItems.length;
-  const visibleNotifications = notifications.filter(
-    n => !deletedIds.includes(n.id) && (!n.phone || comparePhones(n.phone, user?.phone))
-  );
+  const visibleNotifications = notifications.filter(n => {
+    if (deletedIds.includes(n.id)) return false;
+    // If notification has email → only show to that email user
+    if (n.email) return n.email.toLowerCase() === user?.email?.toLowerCase();
+    // If notification has phone but no email → fallback phone match
+    if (n.phone) return comparePhones(n.phone, user?.phone);
+    // Global notification (no email, no phone) → show to everyone
+    return true;
+  });
   const unreadNotifications = visibleNotifications.filter(n => !readIds.includes(n.id)).length;
 
   const [phone, setPhone] = useState('');
