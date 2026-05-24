@@ -176,38 +176,34 @@ export default function Checkout() {
         if (!isAddressComplete) { toast.error('Pehle delivery address fill karo'); setEditingAddress(true); return; }
 
         // Check location restriction before placing order
+        const isLocationRestrictionEnabled = !!storeSettings?.locationService?.enabled;
         try {
-            locationService.loadServiceAreaSettings();
+            if (isLocationRestrictionEnabled) {
+                const settings = storeSettings.locationService || {};
+                locationService.updateServiceArea({
+                    ...settings,
+                    name: settings.villageName || settings.name || 'My Village',
+                });
 
-            // If location service is enabled, validate user location
-            if (locationService.serviceArea.enabled) {
-                const userLocation = locationService.userLocation || locationService.getCachedLocation();
+                // Force fresh device location at order time to avoid stale-cache bypass
+                const currentLocation = await locationService.getCurrentLocation();
+                const isWithinArea = await locationService.isWithinServiceArea(currentLocation);
 
-                if (!userLocation) {
-                    // Try to get current location
-                    const currentLocation = await locationService.getCurrentLocation();
-                    const isWithinArea = await locationService.isWithinServiceArea(currentLocation);
-
-                    if (!isWithinArea) {
-                        const outOfAreaMessage = locationService.getOutOfAreaMessage();
-                        toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
-                        return;
-                    }
-                } else {
-                    const isWithinArea = await locationService.isWithinServiceArea(userLocation);
-
-                    if (!isWithinArea) {
-                        const outOfAreaMessage = locationService.getOutOfAreaMessage();
-                        toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
-                        return;
-                    }
+                if (!isWithinArea) {
+                    const outOfAreaMessage = locationService.getOutOfAreaMessage();
+                    toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
+                    return;
                 }
             }
         } catch (locationError) {
             console.error('Location validation error:', locationError);
-            // If location check fails but service is enabled, block the order
-            if (locationService.serviceArea.enabled) {
-                toast.error('Unable to verify your location. Please check location permissions.');
+            if (isLocationRestrictionEnabled) {
+                const permissionDenied = locationError?.code === 1 || locationError?.code === 'PERMISSION_DENIED';
+                toast.error(
+                    permissionDenied
+                        ? 'Location permission required to place order. Please allow location access.'
+                        : 'Unable to verify your location. Please try again.'
+                );
                 return;
             }
         }
