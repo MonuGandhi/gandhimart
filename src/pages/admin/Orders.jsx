@@ -27,6 +27,8 @@ export default function Orders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrderAreaName, setSelectedOrderAreaName] = useState('');
+  const [selectedOrderAreaLoading, setSelectedOrderAreaLoading] = useState(false);
   const [deliveryBoys, setDeliveryBoys] = useState([]);
   const [udhaarConfirmData, setUdhaarConfirmData] = useState(null);
   const [isAddingUdhaar, setIsAddingUdhaar] = useState(false);
@@ -92,6 +94,66 @@ export default function Orders() {
     }
     return null;
   };
+
+  const getAreaNameFromReverseGeocode = (data) => {
+    const address = data?.address || {};
+    return (
+      address.village ||
+      address.hamlet ||
+      address.town ||
+      address.suburb ||
+      address.city ||
+      address.county ||
+      data?.name ||
+      data?.display_name?.split(',')?.[0] ||
+      'Unknown area'
+    );
+  };
+
+  useEffect(() => {
+    const orderLocation = getOrderLocation(selectedOrder);
+    if (!orderLocation) {
+      setSelectedOrderAreaName('');
+      setSelectedOrderAreaLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSelectedOrderAreaLoading(true);
+    setSelectedOrderAreaName('');
+
+    const reverseGeocode = async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(orderLocation.lat)}&lon=${encodeURIComponent(orderLocation.lng)}&format=jsonv2&addressdetails=1`;
+        const response = await fetch(url, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        if (!response.ok) throw new Error(`Reverse geocode failed (${response.status})`);
+        const data = await response.json();
+        const areaName = getAreaNameFromReverseGeocode(data);
+        if (!cancelled) {
+          setSelectedOrderAreaName(areaName);
+        }
+      } catch (err) {
+        console.error('Reverse geocode error:', err);
+        if (!cancelled) {
+          setSelectedOrderAreaName('Unknown area');
+        }
+      } finally {
+        if (!cancelled) {
+          setSelectedOrderAreaLoading(false);
+        }
+      }
+    };
+
+    reverseGeocode();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedOrder]);
 
   const handleManualCredit = async (order, force = false) => {
     if (!order.referralCode) {
@@ -517,8 +579,27 @@ export default function Orders() {
                 <div className="bg-green-50 border border-green-100 p-3 rounded-xl text-sm space-y-2">
                   {getOrderLocation(selectedOrder) ? (
                     <>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-green-700 font-black">Village / Area</p>
+                          <p className="font-black text-green-900">
+                            {selectedOrderAreaLoading ? 'Checking location...' : (selectedOrderAreaName || selectedOrder.address?.village || 'Area not found')}
+                          </p>
+                        </div>
+                        <span className="bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded-full text-[10px] font-black shrink-0">
+                          Map Ready
+                        </span>
+                      </div>
                       <p><span className="font-semibold">Latitude:</span> {selectedOrder.deliveryLat}</p>
                       <p><span className="font-semibold">Longitude:</span> {selectedOrder.deliveryLng}</p>
+                      <div className="overflow-hidden rounded-lg border border-green-200 bg-white">
+                        <iframe
+                          title="Order location map"
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(selectedOrder.deliveryLng) - 0.01}%2C${Number(selectedOrder.deliveryLat) - 0.01}%2C${Number(selectedOrder.deliveryLng) + 0.01}%2C${Number(selectedOrder.deliveryLat) + 0.01}&layer=mapnik&marker=${selectedOrder.deliveryLat}%2C${selectedOrder.deliveryLng}`}
+                          className="w-full h-52"
+                          loading="lazy"
+                        />
+                      </div>
                       <button
                         onClick={() => {
                           const loc = getOrderLocation(selectedOrder);
@@ -528,6 +609,16 @@ export default function Orders() {
                         className="w-full bg-[#1CA672] text-white font-bold py-2 rounded-lg hover:bg-[#17905F] transition-colors shadow-sm"
                       >
                         Open in Google Maps
+                      </button>
+                      <button
+                        onClick={() => {
+                          const loc = getOrderLocation(selectedOrder);
+                          if (!loc) return;
+                          window.open(`https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lng}#map=16/${loc.lat}/${loc.lng}`, '_blank');
+                        }}
+                        className="w-full bg-white text-green-700 font-bold py-2 rounded-lg border border-green-200 hover:bg-green-100 transition-colors shadow-sm"
+                      >
+                        Open in Map
                       </button>
                     </>
                   ) : (
