@@ -220,19 +220,25 @@ export const useOrdersStore = create(
           s.key === stepKey ? { ...s, done: true, time: new Date().toISOString() } : s
         );
 
-        await updateDoc(doc(db, 'orders', id), {
-          status: stepKey,
-          steps: updatedSteps
-        });
+        try {
+          await updateDoc(doc(db, 'orders', id), {
+            status: stepKey,
+            steps: updatedSteps
+          });
 
-        // Trigger notification
-        const statusText = stepKey.replace(/_/g, ' ').toUpperCase();
-        useNotificationStore.getState().addNotification({
-          title: `Order Update: ${statusText}`,
-          message: `Your order #${id} is now ${stepKey.replace(/_/g, ' ')}.`,
-          type: 'order',
-          phone: order.deliveryAddress?.phone || order.address?.phone
-        });
+          // Trigger notification
+          const statusText = stepKey.replace(/_/g, ' ').toUpperCase();
+          useNotificationStore.getState().addNotification({
+            title: `Order Update: ${statusText}`,
+            message: `Your order #${id} is now ${stepKey.replace(/_/g, ' ')}.`,
+            type: 'order',
+            phone: order.deliveryAddress?.phone || order.address?.phone
+          });
+        } catch (error) {
+          console.error("updateOrderStep failed:", error);
+          toast.error("Status update failed: " + (error.message || error));
+          throw error;
+        }
       },
 
       reorder: (orderId, addItem) => {

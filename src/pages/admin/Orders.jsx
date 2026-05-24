@@ -63,13 +63,23 @@ export default function Orders() {
 
     // If cancelling the order, restore stock first
     if (newStatus === 'cancelled' && order && order.status !== 'cancelled') {
-      await restoreOrderStock(order);
+      try {
+        await restoreOrderStock(order);
+      } catch (e) {
+        console.error("Failed to restore stock:", e);
+        toast.error("Stock restore failed: " + e.message);
+      }
     }
 
-    updateOrderStep(orderId, newStatus);
-    toast.success(`Order ${orderId} updated to ${newStatus}`);
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
+    try {
+      await updateOrderStep(orderId, newStatus);
+      toast.success(`Order ${orderId} updated to ${newStatus}`);
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
+    } catch (err) {
+      console.error("Failed to update status in UI:", err);
+      // Detailed error toast already handled in store, fallback here if needed
     }
   };
 
