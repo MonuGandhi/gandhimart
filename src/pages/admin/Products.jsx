@@ -168,20 +168,22 @@ export default function Products() {
       <div className="space-y-6">
         {/** Group products by category id **/}
         {(() => {
+          // Normalize category ids to strings to avoid mismatches between numeric and string ids
           const map = new Map();
           filteredProducts.forEach(p => {
-            const cid = p.categoryId ?? 'uncategorized';
+            const raw = p.categoryId ?? 'uncategorized';
+            const cid = String(raw);
             if (!map.has(cid)) map.set(cid, []);
             map.get(cid).push(p);
           });
           const groups = [];
-          const categoryOrder = categories.map(c => c.id);
+          const categoryOrder = categories.map(c => String(c.id));
           categoryOrder.forEach(cid => {
-            if (map.has(cid)) groups.push({ id: cid, name: categories.find(c => c.id === cid)?.name || 'Unknown', products: map.get(cid) });
+            if (map.has(cid)) groups.push({ id: cid, name: categories.find(c => String(c.id) === cid)?.name || 'Unknown', products: map.get(cid) });
             map.delete(cid);
           });
           map.forEach((prods, cid) => {
-            groups.push({ id: cid, name: cid === 'uncategorized' ? 'Uncategorized' : (categories.find(c => c.id === cid)?.name || 'Unknown'), products: prods });
+            groups.push({ id: cid, name: cid === 'uncategorized' ? 'Uncategorized' : (categories.find(c => String(c.id) === cid)?.name || 'Unknown'), products: prods });
           });
           return groups.map(group => (
             <div key={String(group.id)} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
