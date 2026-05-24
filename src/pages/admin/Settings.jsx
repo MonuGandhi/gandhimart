@@ -7,9 +7,12 @@ import toast from 'react-hot-toast';
 export default function Settings() {
   const storeSettings = useAdminStore((state) => state.storeSettings);
   const updateSettings = useAdminStore((state) => state.updateSettings);
+  const cleanupAdminData = useAdminStore((state) => state.cleanupAdminData);
   const resetToDefaultData = useAdminStore((state) => state.resetToDefaultData);
 
   const [formData, setFormData] = useState(storeSettings);
+  const [cleanupRange, setCleanupRange] = useState('this_month');
+  const [cleanupLoading, setCleanupLoading] = useState(false);
 
   useEffect(() => {
     if (storeSettings) {
@@ -125,6 +128,35 @@ export default function Settings() {
     } catch (error) {
       console.error('Location toggle error:', error);
       toast.error('Failed to update location setting: ' + error.message, { id: toastId });
+    }
+  };
+
+  const handleCleanupData = async () => {
+    const labelMap = {
+      this_week: 'this week',
+      this_month: 'this month',
+      all: 'all data',
+    };
+
+    const selectedLabel = labelMap[cleanupRange] || cleanupRange;
+    const confirmMessage = `Delete ${selectedLabel} from orders, udhaars, notifications, and delivery tracking? This cannot be undone.`;
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setCleanupLoading(true);
+    const toastId = toast.loading('Deleting selected data...');
+
+    try {
+      const summary = await cleanupAdminData({ range: cleanupRange });
+      toast.success(
+        `Deleted ${summary.orders || 0} orders, ${summary.udhaars || 0} udhaars, ${summary.notifications || 0} notifications, and ${summary.delivery_tracking || 0} delivery docs.`,
+        { id: toastId }
+      );
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      toast.error('Failed to remove selected data: ' + error.message, { id: toastId });
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -319,6 +351,41 @@ export default function Settings() {
                 <p className="text-xs text-gray-500 mt-1">Leave empty to disable Scan & Pay option</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Pro Admin Data Cleanup */}
+        {useAdminStore.getState().adminRole === 'pro_admin' && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Data Cleanup</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Permanently remove test data from orders, udhaars, notifications, and delivery tracking for the selected period.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Delete data for</label>
+                <select
+                  value={cleanupRange}
+                  onChange={(e) => setCleanupRange(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
+                >
+                  <option value="this_week">This Week</option>
+                  <option value="this_month">This Month</option>
+                  <option value="all">All Data</option>
+                </select>
+              </div>
+              <button
+                type="button"
+                onClick={handleCleanupData}
+                disabled={cleanupLoading}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors"
+              >
+                {cleanupLoading ? 'Deleting...' : 'Delete Selected Data'}
+              </button>
+            </div>
+            <p className="text-xs text-red-500 mt-3">
+              Only pro admin can use this. It will delete matching Firestore docs and reduce database load.
+            </p>
           </div>
         )}
 

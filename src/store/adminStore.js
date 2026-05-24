@@ -20,6 +20,43 @@ import {
 } from 'firebase/firestore';
 import { logWalletTransaction } from '../utils/wallet';
 
+const toMillis = (value) => {
+  if (!value) return null;
+  if (typeof value === 'number') return value;
+  if (typeof value?.toMillis === 'function') return value.toMillis();
+  if (typeof value?.seconds === 'number') return value.seconds * 1000;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getTime();
+};
+
+const getCleanupRange = (rangeKey) => {
+  const now = new Date();
+  const end = now.getTime();
+
+  if (rangeKey === 'this_week') {
+    const start = new Date(now);
+    const dayOffset = (now.getDay() + 6) % 7; // Monday as start of week
+    start.setDate(now.getDate() - dayOffset);
+    start.setHours(0, 0, 0, 0);
+    return { start: start.getTime(), end };
+  }
+
+  if (rangeKey === 'this_month') {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    return { start: start.getTime(), end };
+  }
+
+  return { start: 0, end };
+};
+
+const deleteRefsInBatches = async (refs) => {
+  for (let i = 0; i < refs.length; i += 400) {
+    const batch = writeBatch(db);
+    refs.slice(i, i + 400).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+};
+
 export const useAdminStore = create(
   persist(
     (set, get) => ({
@@ -370,6 +407,44 @@ export const useAdminStore = create(
 
         await store.initializeStore();
         store.fixCoupons();
+      },
+
+      cleanupAdminData: async ({ range = 'this_month' } = {}) => {
+        const normalizedRange = range === 'all' ? 'all' : range;
+        const { start, end } = getCleanupRange(normalizedRange);
+
+        const targets = [
+          { collectionName: 'orders', field: 'placedAt' },
+          { collectionName: 'udhaars', field: 'created_at', fallbackField: 'date' },
+          { collectionName: 'notifications', field: 'createdAt' },
+          { collectionName: 'delivery_tracking', field: 'updated_at' },
+        ];
+
+        const summary = {};
+
+        for (const target of targets) {
+          const snap = await getDocs(collection(db, target.collectionName));
+          const refsToDelete = [];
+
+          snap.forEach((docSnap) => {
+            const data = docSnap.data();
+            const rawValue = data?.[target.field] ?? (target.fallbackField ? data?.[target.fallbackField] : null);
+            const millis = toMillis(rawValue);
+            const shouldDelete = normalizedRange === 'all' || (millis !== null && millis >= start && millis <= end);
+
+            if (shouldDelete) {
+              refsToDelete.push(docSnap.ref);
+            }
+          });
+
+          if (refsToDelete.length > 0) {
+            await deleteRefsInBatches(refsToDelete);
+          }
+
+          summary[target.collectionName] = refsToDelete.length;
+        }
+
+        return summary;
       },
 
       resetToDefaultData: async () => {
