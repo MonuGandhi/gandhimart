@@ -110,6 +110,24 @@ export default function Settings() {
     }
   };
 
+  const handleLocationToggle = async (enabled) => {
+    const toastId = toast.loading(enabled ? 'Enabling location check...' : 'Disabling location check...');
+    try {
+      await useAdminStore.getState().updateLocationSettings({ enabled });
+      setFormData((prev) => ({
+        ...prev,
+        locationService: {
+          ...(prev?.locationService || {}),
+          enabled,
+        },
+      }));
+      toast.success(enabled ? 'Location check enabled' : 'Location check disabled', { id: toastId });
+    } catch (error) {
+      console.error('Location toggle error:', error);
+      toast.error('Failed to update location setting: ' + error.message, { id: toastId });
+    }
+  };
+
   const handleResetData = async () => {
     if (window.confirm('WARNING: This will delete all custom products, categories, AND BANNERS, and revert to the original grocery-themed data. Are you sure?')) {
       const toastId = toast.loading('Resetting store data...');
