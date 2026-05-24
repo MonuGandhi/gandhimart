@@ -287,7 +287,7 @@ export default function Header() {
             {/* Premium Header Wishlist Icon */}
             <button 
               onClick={() => navigate('/wishlist')}
-              className="p-2 bg-red-50 text-red-600 rounded-full relative border border-red-100 transition-transform active:scale-90"
+              className="hidden md:block p-2 bg-red-50 text-red-600 rounded-full relative border border-red-100 transition-transform active:scale-90"
               title="My Wishlist"
             >
               <Heart 
