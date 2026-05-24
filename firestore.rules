@@ -89,6 +89,11 @@ service cloud.firestore {
       allow write: if hasAdminAccess();
     }
 
+    // Delivery tracking: admin and pro admin can manage cleanup and monitoring data
+    match /delivery_tracking/{docId} {
+      allow read, write: if hasAdminAccess();
+    }
+
     // Udhaar entries: only admins can read/write
     match /udhaars/{docId} {
       allow read, write: if hasAdminAccess();
