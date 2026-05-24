@@ -10,13 +10,16 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:rules": "node scripts/firestore_rule_tests.mjs",
+    "emulators": "firebase emulators:start --only auth,firestore"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "canvas-confetti": "^1.9.4",
     "embla-carousel-react": "^8.6.0",
     "firebase": "^11.2.0",
+    "firebase-admin": "^13.10.0",
     "lucide-react": "^0.470.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

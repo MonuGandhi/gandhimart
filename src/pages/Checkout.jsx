@@ -13,7 +13,7 @@ import {
     MapPin, Tag, Wallet, Smartphone, Truck,
     CheckCircle2, Zap, X, ArrowLeft, Edit2, Gift, ChevronRight, ShoppingBag
 } from 'lucide-react';
-import { updateDoc, doc, increment, getDoc } from 'firebase/firestore';
+import { writeBatch, doc, increment, getDoc, collection } from 'firebase/firestore';
 import { db } from '../firebase';
 import { logWalletTransaction } from '../utils/wallet';
 
@@ -221,8 +221,13 @@ export default function Checkout() {
             console.error('Auto-save address error:', err);
             // Non-blocking error, we still want to place the order
         }
+        const batch = writeBatch(db);
+        const orderId = `GM${Date.now()}`;
+        const orderRef = doc(collection(db, 'orders'), orderId);
+
         try {
             const orderData = {
+                id: orderId,
                 items: items.filter(i => i && i.name), // Safety filter
                 customerName: user?.name || 'Customer',
                 customerEmail: user?.email?.toLowerCase() || '',
@@ -243,24 +248,27 @@ export default function Checkout() {
                 isAppInstalled: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true, // ✅ Check if ordered from PWA
             };
 
-            const order = await placeOrder(orderData);
+            // Add order to batch
+            batch.set(orderRef, orderData);
 
             if (walletDeduction > 0 && user?.email) {
-                await updateDoc(doc(db, 'users', user.email.toLowerCase()), {
+                const userRef = doc(db, 'users', user.email.toLowerCase());
+                batch.update(userRef, {
                     walletBalance: increment(-walletDeduction)
                 });
-                await logWalletTransaction(user.email.toLowerCase(), -walletDeduction, 'debit', `Used for order #${order.id}`);
+                await logWalletTransaction(user.email.toLowerCase(), -walletDeduction, 'debit', `Used for order #${orderId}`);
             }
 
-            // ✅ Save referral relationship to user profile permanently
             if (appliedReferral && user?.email && !user?.referredBy) {
-                await updateDoc(doc(db, 'users', user.email.toLowerCase()), {
+                const userRef = doc(db, 'users', user.email.toLowerCase());
+                batch.update(userRef, {
                     referredBy: appliedReferral.code
                 });
             }
 
+            await batch.commit();
             clearCart();
-            navigate(`/order-success?id=${order.id}`);
+            navigate(`/order-success?id=${orderId}`);
         } catch (err) {
             console.error('Order error:', err);
             toast.error('Failed to place order. Please try again.');

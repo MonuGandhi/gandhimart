@@ -119,7 +119,9 @@ export default function Products() {
           onClick={() => {
             setEditingProduct(null);
             setFormData({
-              name: '', categoryId: 1, price: '', originalPrice: '', costPrice: '', discount: 0,
+              name: '', 
+              categoryId: categoryFilter === 'all' ? (categories[0]?.id || 1) : Number(categoryFilter), 
+              price: '', originalPrice: '', costPrice: '', discount: 0,
               image: 'https://picsum.photos/seed/new/400/400', weight: '1', unit: 'kg',
               description: '', brand: '', tags: '', inStock: true, stock: 100
             });
@@ -454,6 +456,9 @@ export default function Products() {
                     }}
                     className="text-[10px] font-black bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
                   >Auto-generate</button>
+                </div>
+
+                <div className="space-y-3">
                     {(formData.variants || []).map((variant, idx) => (
                       <div key={variant.id || idx} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
                         <div className="flex-1 grid grid-cols-4 gap-3">

@@ -2,29 +2,29 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    function currentUserEmail() {
+      return (request.auth != null && request.auth.token != null && 'email' in request.auth.token)
+        ? request.auth.token.email.lower()
+        : "";
+    }
+
     function isMasterAdmin() {
-      return request.auth != null && 
-        request.auth.token != null && 
-        request.auth.token.email != null && (
-          request.auth.token.email.lower() == "monugandhi5911@gmail.com" || 
-          request.auth.token.email.lower() == "monugandhi03@gmail.com"
-        );
+      return currentUserEmail() in ["monugandhi5911@gmail.com", "monugandhi03@gmail.com"];
+    }
+
+    function hasRole(email, roles) {
+      return exists(/databases/$(database)/documents/users/$(email)) &&
+        get(/databases/$(database)/documents/users/$(email)).data.role in roles;
     }
 
     function isStaff() {
-      return request.auth != null && 
-        request.auth.token != null && 
-        request.auth.token.email != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.token.email.lower())) &&
-        get(/databases/$(database)/documents/users/$(request.auth.token.email.lower())).data.role in ['admin', 'pro_admin'];
+      return currentUserEmail() != "" &&
+        hasRole(currentUserEmail(), ['admin', 'pro_admin']);
     }
 
     function isStaffMember() {
-       return request.auth != null && 
-        request.auth.token != null && 
-        request.auth.token.email != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.token.email.lower())) &&
-        get(/databases/$(database)/documents/users/$(request.auth.token.email.lower())).data.role in ['admin', 'pro_admin', 'delivery_boy'];
+      return currentUserEmail() != "" &&
+        hasRole(currentUserEmail(), ['admin', 'pro_admin', 'delivery_boy']);
     }
 
     function hasAdminAccess() {
@@ -32,10 +32,7 @@ service cloud.firestore {
     }
 
     function isOwner(userId) {
-      return request.auth != null && 
-        request.auth.token != null && 
-        request.auth.token.email != null && 
-        request.auth.token.email.lower() == userId;
+      return currentUserEmail() == userId;
     }
 
     // Products, Categories, Banners, Settings, Coupons
@@ -44,9 +41,7 @@ service cloud.firestore {
       allow create, delete: if hasAdminAccess();
       allow update: if hasAdminAccess() ||
         // Allow customers to update rating/reviewCount
-        (request.auth != null &&
-         request.auth.token != null &&
-         request.auth.token.email != null &&
+        (currentUserEmail() != "" &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewCount']) &&
          request.resource.data.rating >= 1 &&
          request.resource.data.rating <= 5 &&
@@ -54,25 +49,28 @@ service cloud.firestore {
           request.resource.data.reviewCount == resource.data.get('reviewCount', 0) - 1 ||
           request.resource.data.reviewCount == resource.data.get('reviewCount', 0))) ||
         // Allow customers to update stock and/or inStock (for order placement)
-        (request.auth != null &&
-         request.auth.token != null &&
-         request.auth.token.email != null &&
+        (currentUserEmail() != "" &&
          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) ||
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['inStock']) ||
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'inStock'])));
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'inStock'])) &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['stock']) ||
+          (request.resource.data.stock <= resource.data.get('stock', 0) + 20)));
     }
 
     match /{path=**}/reviews/{reviewId} {
       allow read: if true;
-      allow create: if request.auth != null && 
-                      request.auth.token != null && 
-                      request.auth.token.email != null && 
-                      request.resource.data.get('userEmail', '').lower() == request.auth.token.email.lower();
+      allow create: if currentUserEmail() != "" && 
+                      request.resource.data.get('userEmail', '').lower() == currentUserEmail() &&
+                      request.resource.data.rating is int &&
+                      request.resource.data.rating >= 1 &&
+                      request.resource.data.rating <= 5;
       allow update, delete: if hasAdminAccess() || 
-        (request.auth != null && 
-         request.auth.token != null && 
-         request.auth.token.email != null && 
-         resource.data.get('userEmail', '').lower() == request.auth.token.email.lower());
+        (currentUserEmail() != "" && 
+         resource.data.get('userEmail', '').lower() == currentUserEmail() &&
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['rating']) ||
+          (request.resource.data.rating is int &&
+           request.resource.data.rating >= 1 &&
+           request.resource.data.rating <= 5)));
     }
     match /categories/{docId} { allow read: if true; allow write: if hasAdminAccess(); }
     match /banners/{docId} { allow read: if true; allow write: if hasAdminAccess(); }
@@ -105,29 +103,24 @@ service cloud.firestore {
     // Orders: Admins can do anything. Users can create, and read ONLY their own orders. Delivery boys can read assigned orders.
     match /orders/{docId} {
       allow read: if hasAdminAccess() || 
-        (request.auth != null && 
-         request.auth.token != null && 
-         request.auth.token.email != null && (
-           resource.data.get('customerEmail', '') == request.auth.token.email.lower() ||
+        (currentUserEmail() != "" && (
+           resource.data.get('customerEmail', '') == currentUserEmail() ||
            (resource.data.get('assignedDeliveryBoy', null) != null && 
-            resource.data.assignedDeliveryBoy.get('email', '') == request.auth.token.email.lower())
+            resource.data.assignedDeliveryBoy.get('email', '') == currentUserEmail())
          ));
-      allow create: if request.auth != null && 
-        request.auth.token != null && 
-        request.auth.token.email != null && 
-        request.resource.data.get('customerEmail', '') == request.auth.token.email.lower();
+      allow create: if currentUserEmail() != "" && 
+        request.resource.data.get('customerEmail', '') == currentUserEmail() &&
+        request.resource.data.get('status', '') == 'placed';
       allow update, delete: if hasAdminAccess() || 
-        (request.auth != null && 
-         request.auth.token != null && 
-         request.auth.token.email != null && (
+        (currentUserEmail() != "" && (
            // Case 1: Delivery boy updating status
            (isStaffMember() &&
             resource.data.get('assignedDeliveryBoy', null) != null && 
-            resource.data.assignedDeliveryBoy.get('email', '') == request.auth.token.email.lower() &&
+            resource.data.assignedDeliveryBoy.get('email', '') == currentUserEmail() &&
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'steps', 'assignedDeliveryBoy'])) ||
            
            // Case 2: Customer cancelling their own 'placed' order
-           (resource.data.get('customerEmail', '') == request.auth.token.email.lower() && 
+           (resource.data.get('customerEmail', '') == currentUserEmail() && 
             resource.data.get('status', '') == 'placed' && 
             request.resource.data.get('status', '') == 'cancelled' &&
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'steps']))
@@ -146,7 +139,6 @@ service cloud.firestore {
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['walletBalance']) || 
           (request.resource.data.walletBalance < resource.data.walletBalance && request.resource.data.walletBalance >= 0))
         );
-        
         
       allow delete: if hasAdminAccess();
     }
