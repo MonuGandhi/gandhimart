@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Check, Clock, Package, Truck, MapPin, X, Phone, MessageCircle,
-  ShoppingBag, ShieldCheck, Box, PartyPopper, AlertCircle 
+  ShoppingBag, ShieldCheck, Box, PartyPopper, AlertCircle, ShoppingCart, RotateCcw, Wallet
 } from 'lucide-react';
 import Layout from '../components/layout/Layout';
 import { useOrdersStore } from '../store/ordersStore';
@@ -21,6 +21,7 @@ export default function OrderTracking() {
   const storeSettings = useAdminStore((s) => s.storeSettings) || {};
   const cancelOrder = useOrdersStore((s) => s.cancelOrder);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     // Keep local order state in sync with store
@@ -51,12 +52,15 @@ export default function OrderTracking() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order?.placedAt, order?.status]);
 
-  const handleCancel = async () => {
-    if (window.confirm('Are you sure you want to cancel this order?')) {
-      setCancelling(true);
-      await cancelOrder(order.id);
-      setCancelling(false);
-    }
+  const handleCancel = () => {
+    setShowCancelModal(true);
+  };
+
+  const confirmCancel = async () => {
+    setCancelling(true);
+    await cancelOrder(order.id);
+    setCancelling(false);
+    setShowCancelModal(false);
   };
 
   if (!order) {
@@ -424,18 +428,134 @@ export default function OrderTracking() {
           </div>
 
           {order.status === 'cancelled' && (
-            <div className="bg-red-50 dark:bg-red-950/20 rounded-[2rem] p-6 border border-red-100 dark:border-red-900/30 text-center transition-colors duration-300">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                <X size={32} strokeWidth={3} />
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-red-100 dark:border-red-900/30 bg-white dark:bg-[#0b0f19] shadow-lg">
+              {/* Gradient Header */}
+              <div className="bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 p-8 text-center relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-2 left-4 text-white text-4xl">✕</div>
+                  <div className="absolute bottom-3 right-6 text-white text-3xl">✕</div>
+                  <div className="absolute top-6 right-10 text-white text-2xl">✕</div>
+                </div>
+                <div className="relative z-10">
+                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/30">
+                    <X size={36} strokeWidth={3} className="text-white" />
+                  </div>
+                  <h3 className="text-2xl font-black text-white tracking-tight">Order Cancelled</h3>
+                  <p className="text-white/80 text-sm font-bold mt-1">#{order.id?.slice(-8)}</p>
+                </div>
               </div>
-              <h3 className="text-xl font-black text-red-900 dark:text-red-400 mb-2 uppercase tracking-tight">Order Cancelled</h3>
-              <p className="text-sm font-bold text-red-700/70 dark:text-red-300/70 leading-relaxed">
-                Ye order cancel kar diya gaya hai. Agar aapne payment ki thi, toh wo aapke wallet me vapas aa jayegi.
-              </p>
+
+              {/* Body */}
+              <div className="p-6 space-y-4">
+                {/* Refund Info */}
+                <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-2xl p-4">
+                  <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center shrink-0">
+                    <Wallet size={20} className="text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-amber-900 dark:text-amber-300">Refund Status</p>
+                    <p className="text-xs font-bold text-amber-700/80 dark:text-amber-400/80 mt-0.5 leading-relaxed">
+                      {(order.walletUsed > 0 || order.paymentMethod === 'upi' || order.paymentMethod === 'scanner')
+                        ? 'Aapka refund wallet mein process ho raha hai ya ho chuka hai. 💸'
+                        : 'COD order tha, koi refund nahi tha. ✓'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div className="flex items-start gap-3 bg-gray-50 dark:bg-slate-900/60 border border-gray-100 dark:border-slate-800 rounded-2xl p-4">
+                  <span className="text-xl shrink-0">😔</span>
+                  <p className="text-sm font-bold text-gray-600 dark:text-gray-300 leading-relaxed">
+                    Ye order cancel kar diya gaya hai. Hume umeed hai aap dobara order karenge! Hum hamesha aapki service ke liye taiyaar hain.
+                  </p>
+                </div>
+
+                {/* Reorder CTA */}
+                <button
+                  onClick={() => navigate('/')}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1CA672] to-emerald-500 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-emerald-900/20 active:scale-95 transition-all"
+                >
+                  <ShoppingCart size={20} />
+                  Order Again
+                </button>
+              </div>
             </div>
           )}
         </div>
 
+
+        {/* ─────────── Cancel Confirmation Modal ─────────── */}
+        {showCancelModal && (
+          <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              onClick={() => !cancelling && setShowCancelModal(false)}
+            />
+
+            {/* Modal Card */}
+            <div className="relative w-full max-w-sm z-10 animate-in slide-in-from-bottom-12 duration-300">
+              {/* Red gradient top bar */}
+              <div className="bg-gradient-to-r from-red-500 via-rose-500 to-pink-600 rounded-t-[2.5rem] p-6 text-center">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/30">
+                  <X size={28} strokeWidth={3} className="text-white" />
+                </div>
+                <h3 className="text-xl font-black text-white">Cancel Order?</h3>
+                <p className="text-white/80 text-xs font-bold mt-1">Ye action undo nahi ho sakta</p>
+              </div>
+
+              {/* White body */}
+              <div className="bg-white dark:bg-[#0b0f19] rounded-b-[2.5rem] p-6 space-y-4">
+                {/* Order info pill */}
+                <div className="flex items-center gap-3 bg-gray-50 dark:bg-slate-900 rounded-2xl p-4 border border-gray-100 dark:border-slate-800">
+                  <div className="w-10 h-10 bg-red-50 dark:bg-red-950/30 rounded-xl flex items-center justify-center shrink-0">
+                    <Package size={18} className="text-red-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Order ID</p>
+                    <p className="text-sm font-black text-gray-900 dark:text-white truncate">#{order?.id?.slice(-8)}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Amount</p>
+                    <p className="text-sm font-black text-gray-900 dark:text-white">{formatPrice(order?.total || order?.totalAmount)}</p>
+                  </div>
+                </div>
+
+                {/* Refund notice */}
+                {(order?.walletUsed > 0 || order?.paymentMethod === 'upi' || order?.paymentMethod === 'scanner') && (
+                  <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-xl p-3">
+                    <Wallet size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                    <p className="text-[11px] font-bold text-amber-700 dark:text-amber-400 leading-relaxed">
+                      Aapka refund automatically wallet mein credit ho jayega.
+                    </p>
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <button
+                    onClick={() => setShowCancelModal(false)}
+                    disabled={cancelling}
+                    className="py-3.5 rounded-2xl font-black text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 active:scale-95 transition-all disabled:opacity-50 text-sm"
+                  >
+                    Nahi, Rakho
+                  </button>
+                  <button
+                    onClick={confirmCancel}
+                    disabled={cancelling}
+                    className="py-3.5 rounded-2xl font-black text-white bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 active:scale-95 transition-all disabled:opacity-60 shadow-lg shadow-red-200 dark:shadow-red-900/20 text-sm"
+                  >
+                    {cancelling ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <RotateCcw size={14} className="animate-spin" /> Cancel ho raha...
+                      </span>
+                    ) : 'Haan, Cancel Karo'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Help Modal */}
         {showHelp && (
