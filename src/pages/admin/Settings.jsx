@@ -215,129 +215,32 @@ export default function Settings() {
           {/* Location Service Settings */}
           <div className="mt-6 border-t border-gray-100 pt-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Location Service Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <input
-                  type="checkbox"
-                  id="locationServiceEnabled"
-                  checked={formData.locationService?.enabled || false}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    locationService: {
-                      ...formData.locationService,
-                      enabled: e.target.checked
-                    }
-                  })}
-                  className="h-4 w-4 text-[#1CA672] bg-gray-50 border-gray-300 rounded focus:ring-[#1CA672]"
-                />
-                <label htmlFor="locationServiceEnabled" className="text-sm font-bold text-gray-700">
-                  Enable Location Service Restrictions
+            <div className="flex items-center justify-between gap-4 bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <div>
+                <label className="text-sm font-black text-gray-900 block">
+                  Require location before order
                 </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  ON = customer must allow GPS and the order is checked using the saved Madhosinghana area.
+                </p>
               </div>
-
-              {formData.locationService?.enabled && (
-                <div className="bg-gray-50 rounded-xl p-4 space-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Village/Area Name</label>
-                    <input
-                      type="text"
-                      value={formData.locationService?.villageName || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        locationService: {
-                          ...formData.locationService,
-                          villageName: e.target.value
-                        }
-                      })}
-                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
-                      placeholder="e.g., Madhosinghana"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">Latitude</label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={formData.locationService?.center?.lat || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          locationService: {
-                            ...formData.locationService,
-                            center: {
-                              ...formData.locationService?.center,
-                              lat: parseFloat(e.target.value) || 0
-                            }
-                          }
-                        })}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
-                        placeholder="e.g., 29.5833"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1">Longitude</label>
-                      <input
-                        type="number"
-                        step="0.000001"
-                        value={formData.locationService?.center?.lng || ''}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          locationService: {
-                            ...formData.locationService,
-                            center: {
-                              ...formData.locationService?.center,
-                              lng: parseFloat(e.target.value) || 0
-                            }
-                          }
-                        })}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
-                        placeholder="e.g., 75.1667"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Delivery Radius (meters)</label>
-                    <input
-                      type="number"
-                      value={formData.locationService?.radius || 10000}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        locationService: {
-                          ...formData.locationService,
-                          radius: parseInt(e.target.value) || 10000
-                        }
-                      })}
-                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
-                      placeholder="e.g., 10000"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Users outside this radius from the center point will not be able to place orders
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1">Out of Area Message</label>
-                    <textarea
-                      value={formData.locationService?.message || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        locationService: {
-                          ...formData.locationService,
-                          message: e.target.value
-                        }
-                      })}
-                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#1CA672] outline-none"
-                      rows="3"
-                      placeholder="Message shown to users outside delivery area"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      This message will be shown to users who are outside your delivery area
-                    </p>
-                  </div>
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() => handleLocationToggle(!(formData.locationService?.enabled || false))}
+                className={`relative inline-flex h-10 w-16 items-center rounded-full transition-colors ${formData.locationService?.enabled ? 'bg-[#1CA672]' : 'bg-gray-300'}`}
+                aria-pressed={!!formData.locationService?.enabled}
+                aria-label="Toggle location requirement"
+              >
+                <span
+                  className={`inline-block h-7 w-7 transform rounded-full bg-white shadow transition-transform ${formData.locationService?.enabled ? 'translate-x-8' : 'translate-x-1'}`}
+                />
+              </button>
+            </div>
+            <div className="mt-3 bg-green-50 border border-green-100 rounded-xl p-4 text-sm text-green-900">
+              <p className="font-bold">Default area is already saved</p>
+              <p className="mt-1 text-green-800">
+                The app uses the existing Madhosinghana center and radius from store settings. You only need to turn this ON/OFF here.
+              </p>
             </div>
           </div>
 
