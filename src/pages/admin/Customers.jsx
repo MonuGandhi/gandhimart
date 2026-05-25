@@ -31,6 +31,12 @@ export default function Customers() {
     return p1.slice(-10) === p2.slice(-10);
   };
 
+  const isRegisteredOrder = (order) => (
+    order?.customerAccountType === 'registered' ||
+    !!order?.customerUid ||
+    !!order?.customerEmail
+  );
+
   const customersWithStats = useMemo(() => {
     // Combine registered users and order customers
     const allCustomers = [...registeredUsers];
@@ -38,12 +44,24 @@ export default function Customers() {
     // Add people who ordered but might not be in registeredUsers (guest checkouts if any)
     orders.forEach(order => {
       const phone = order.deliveryAddress?.phone || order.address?.phone;
-      if (phone && !allCustomers.some(c => comparePhones(c.phone, phone))) {
+      const email = order.customerEmail;
+      const registeredOrder = isRegisteredOrder(order);
+      
+      const exists = allCustomers.some(c => {
+        const phoneMatches = phone && comparePhones(c.phone, phone);
+        const emailMatches = email && c.email && c.email.toLowerCase() === email.toLowerCase();
+        return phoneMatches || emailMatches;
+      });
+
+      if (phone && !exists) {
         allCustomers.push({
-          id: `guest_${order.id}`,
-          name: order.deliveryAddress?.fullName || order.address?.name || 'Guest Customer',
+          id: registeredOrder ? `registered_${order.customerUid || email || order.id}` : `guest_${order.id}`,
+          name: order.deliveryAddress?.fullName || order.address?.name || (registeredOrder ? 'Registered Customer' : 'Guest Customer'),
           phone: phone,
+          email: email || '',
+          customerUid: order.customerUid || null,
           role: 'customer',
+          accountType: registeredOrder ? 'registered' : 'guest',
           joinedDate: order.placedAt
         });
       }
@@ -51,7 +69,17 @@ export default function Customers() {
 
     // Calculate stats for each customer
     return allCustomers.map(c => {
-      const customerOrders = orders.filter(o => comparePhones(o.deliveryAddress?.phone || o.address?.phone, c.phone));
+      const customerOrders = orders.filter(o => {
+        const phone = o.deliveryAddress?.phone || o.address?.phone;
+        const email = o.customerEmail;
+        const registeredOrder = isRegisteredOrder(o);
+        
+        const phoneMatches = phone && comparePhones(c.phone, phone);
+        const emailMatches = email && c.email && c.email.toLowerCase() === email.toLowerCase();
+        const uidMatches = c.customerUid && o.customerUid && String(c.customerUid) === String(o.customerUid);
+        const accountMatches = registeredOrder && c.accountType === 'registered' && (uidMatches || emailMatches || phoneMatches);
+        return phoneMatches || emailMatches || uidMatches || accountMatches;
+      });
       const totalSpent = customerOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
       
       // Find who referred this customer (Lookup by their code)
@@ -408,7 +436,7 @@ export default function Customers() {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-gray-900">{c.name}</p>
-                          {c.id.startsWith('guest_') ? (
+                          {c.accountType === 'guest' || c.id.startsWith('guest_') ? (
                             <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Guest</span>
                           ) : (
                             <span className="text-[9px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border border-green-200">Registered</span>
@@ -447,7 +475,7 @@ export default function Customers() {
                     </div>
                   </td>
                   <td className="p-4">
-                    {!c.id.startsWith('guest_') ? (
+                    {!(c.accountType === 'guest' || c.id.startsWith('guest_')) ? (
                       c.role === 'pro_admin' ? (
                         <span className="text-[10px] text-amber-600 font-black bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg">🔒 Master Admin</span>
                       ) : (
@@ -475,7 +503,7 @@ export default function Customers() {
                         <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1 opacity-60">Balance</p>
                         <p className="font-black text-sm leading-none">{formatPrice(c.walletBalance || 0)}</p>
                       </div>
-                      {!c.id.startsWith('guest_') && isProAdmin && (
+                      {!(c.accountType === 'guest' || c.id.startsWith('guest_')) && isProAdmin && (
                         <button 
                           onClick={() => setWalletModal({ open: true, user: c, amount: '', loading: false })}
                           className="p-2 bg-gray-900 text-white rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-gray-200"

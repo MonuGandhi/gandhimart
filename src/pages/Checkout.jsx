@@ -311,8 +311,11 @@ export default function Checkout() {
                 id: orderId,
                 items: items.filter(i => i && i.name), // Safety filter
                 customerName: user?.name || 'Customer',
+                customerUid: user?.uid || null,
                 customerEmail: user?.email?.toLowerCase() || '',
                 customerPhone: cleanedPhone || user?.phone || '',
+                customerAccountType: 'registered',
+                isGuestOrder: false,
                 address: normalizedAddress, // Consistency: use 'address' key
                 paymentMethod,
                 subtotal: computed.subtotal,
