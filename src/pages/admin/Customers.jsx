@@ -31,37 +31,19 @@ export default function Customers() {
     return p1.slice(-10) === p2.slice(-10);
   };
 
-  const isRegisteredOrder = (order) => (
-    order?.customerAccountType === 'registered' ||
-    !!order?.customerUid ||
-    !!order?.customerEmail
-  );
-
   const customersWithStats = useMemo(() => {
     // Combine registered users and order customers
     const allCustomers = [...registeredUsers];
-    
+
     // Add people who ordered but might not be in registeredUsers (guest checkouts if any)
     orders.forEach(order => {
       const phone = order.deliveryAddress?.phone || order.address?.phone;
-      const email = order.customerEmail;
-      const registeredOrder = isRegisteredOrder(order);
-      
-      const exists = allCustomers.some(c => {
-        const phoneMatches = phone && comparePhones(c.phone, phone);
-        const emailMatches = email && c.email && c.email.toLowerCase() === email.toLowerCase();
-        return phoneMatches || emailMatches;
-      });
-
-      if (phone && !exists) {
+      if (phone && !allCustomers.some(c => comparePhones(c.phone, phone))) {
         allCustomers.push({
-          id: registeredOrder ? `registered_${order.customerUid || email || order.id}` : `guest_${order.id}`,
-          name: order.deliveryAddress?.fullName || order.address?.name || (registeredOrder ? 'Registered Customer' : 'Guest Customer'),
+          id: `guest_${order.id}`,
+          name: order.deliveryAddress?.fullName || order.address?.name || 'Guest Customer',
           phone: phone,
-          email: email || '',
-          customerUid: order.customerUid || null,
           role: 'customer',
-          accountType: registeredOrder ? 'registered' : 'guest',
           joinedDate: order.placedAt
         });
       }
@@ -69,19 +51,9 @@ export default function Customers() {
 
     // Calculate stats for each customer
     return allCustomers.map(c => {
-      const customerOrders = orders.filter(o => {
-        const phone = o.deliveryAddress?.phone || o.address?.phone;
-        const email = o.customerEmail;
-        const registeredOrder = isRegisteredOrder(o);
-        
-        const phoneMatches = phone && comparePhones(c.phone, phone);
-        const emailMatches = email && c.email && c.email.toLowerCase() === email.toLowerCase();
-        const uidMatches = c.customerUid && o.customerUid && String(c.customerUid) === String(o.customerUid);
-        const accountMatches = registeredOrder && c.accountType === 'registered' && (uidMatches || emailMatches || phoneMatches);
-        return phoneMatches || emailMatches || uidMatches || accountMatches;
-      });
+      const customerOrders = orders.filter(o => comparePhones(o.deliveryAddress?.phone || o.address?.phone, c.phone));
       const totalSpent = customerOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
-      
+
       // Find who referred this customer (Lookup by their code)
       let referrerName = null;
       if (c.referredBy) {
@@ -98,16 +70,16 @@ export default function Customers() {
     });
   }, [registeredUsers, orders]);
 
-  const filteredCustomers = useMemo(() => filterReferred 
+  const filteredCustomers = useMemo(() => filterReferred
     ? customersWithStats.filter(c => c.referredBy)
     : customersWithStats, [filterReferred, customersWithStats]);
 
   const getRoleBadge = (role) => {
     switch (role) {
-      case 'pro_admin': return <span className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-amber-200 shadow-sm"><Shield size={10} fill="currentColor"/> Pro Admin ⭐</span>;
-      case 'admin': return <span className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-purple-200"><Shield size={10}/> Admin</span>;
-      case 'delivery_boy': return <span className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-blue-200"><Truck size={10}/> Delivery Boy</span>;
-      default: return <span className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-gray-200"><User size={10}/> Customer</span>;
+      case 'pro_admin': return <span className="flex items-center gap-1 bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-amber-200 shadow-sm"><Shield size={10} fill="currentColor" /> Pro Admin ⭐</span>;
+      case 'admin': return <span className="flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-purple-200"><Shield size={10} /> Admin</span>;
+      case 'delivery_boy': return <span className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-blue-200"><Truck size={10} /> Delivery Boy</span>;
+      default: return <span className="flex items-center gap-1 bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-gray-200"><User size={10} /> Customer</span>;
     }
   };
 
@@ -115,11 +87,11 @@ export default function Customers() {
   const currentAdminUsername = useAdminStore((state) => state.currentAdminUsername);
   const isProAdmin = adminRole === 'pro_admin' || currentAdminUsername === 'monugandhi5911';
 
-  const [pinModal, setPinModal] = useState({ 
-    open: false, userId: null, newRole: null, 
+  const [pinModal, setPinModal] = useState({
+    open: false, userId: null, newRole: null,
     step: 'new', // 'verify' or 'new'
-    oldPin: '', pin: '', confirmPin: '', 
-    loading: false, hasExistingPin: false 
+    oldPin: '', pin: '', confirmPin: '',
+    loading: false, hasExistingPin: false
   });
   const [walletModal, setWalletModal] = useState({ open: false, user: null, amount: '', loading: false });
 
@@ -139,11 +111,11 @@ export default function Customers() {
       const user = registeredUsers.find(u => u.id === id || u.email === id);
       const hasExistingPin = !!(user && user.staffPin);
 
-      setPinModal({ 
-        open: true, userId: id, newRole: newRole, 
+      setPinModal({
+        open: true, userId: id, newRole: newRole,
         step: hasExistingPin ? 'verify' : 'new',
         oldPin: '', pin: '', confirmPin: '',
-        loading: false, hasExistingPin 
+        loading: false, hasExistingPin
       });
       return;
     }
@@ -162,7 +134,7 @@ export default function Customers() {
       // Get user from Firestore to verify PIN
       const userRef = doc(db, 'users', pinModal.userId.toLowerCase());
       const snap = await getDoc(userRef);
-      
+
       if (snap.exists() && snap.data().staffPin === pinModal.oldPin) {
         setPinModal(prev => ({ ...prev, step: 'new', loading: false }));
         toast.success('Old PIN verified! ✅');
@@ -238,7 +210,7 @@ export default function Customers() {
       {pinModal.open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
-            
+
             {/* Header */}
             <div className="text-center mb-5">
               <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -271,13 +243,13 @@ export default function Customers() {
                   />
                 </div>
                 <div className="flex gap-3">
-                  <button 
+                  <button
                     onClick={() => setPinModal({ open: false, userId: null, newRole: null, step: 'new', oldPin: '', pin: '', confirmPin: '', hasExistingPin: false })}
                     className="flex-1 py-3.5 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     onClick={handleVerifyOldStaffPin}
                     disabled={pinModal.loading}
                     className={`flex-1 py-3.5 rounded-xl font-bold text-white transition-all active:scale-95 shadow-lg ${pinModal.loading ? 'bg-gray-300 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'}`}
@@ -313,7 +285,7 @@ export default function Customers() {
                   />
                 </div>
                 <div className="flex gap-3">
-                  <button 
+                  <button
                     onClick={() => {
                       if (pinModal.hasExistingPin) {
                         setPinModal(prev => ({ ...prev, step: 'verify', oldPin: '' }));
@@ -325,7 +297,7 @@ export default function Customers() {
                   >
                     {pinModal.hasExistingPin ? '← Back' : 'Cancel'}
                   </button>
-                  <button 
+                  <button
                     onClick={submitPinChange}
                     disabled={pinModal.loading}
                     className={`flex-1 py-3.5 rounded-xl font-bold text-white transition-all active:scale-95 shadow-lg shadow-green-200 ${pinModal.loading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#1CA672] hover:bg-[#17905F]'}`}
@@ -345,33 +317,33 @@ export default function Customers() {
           <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
             <h3 className="text-xl font-black text-gray-900 mb-2">Adjust Wallet Balance</h3>
             <p className="text-sm text-gray-500 mb-6 font-medium">User: <span className="text-gray-900 font-bold">{walletModal.user.name}</span></p>
-            
+
             <div className="space-y-4 mb-6">
-               <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Amount to Add/Subtract</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-400 text-lg">₹</span>
-                    <input
-                      type="number"
-                      placeholder="e.g. 100 or -50"
-                      value={walletModal.amount}
-                      onChange={(e) => setWalletModal({ ...walletModal, amount: e.target.value })}
-                      className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl pl-8 pr-4 py-4 text-xl font-black focus:outline-none focus:border-[#1CA672] transition-colors"
-                      autoFocus
-                    />
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-2 italic font-medium">Use negative sign (e.g. -50) to subtract money.</p>
-               </div>
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Amount to Add/Subtract</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-gray-400 text-lg">₹</span>
+                  <input
+                    type="number"
+                    placeholder="e.g. 100 or -50"
+                    value={walletModal.amount}
+                    onChange={(e) => setWalletModal({ ...walletModal, amount: e.target.value })}
+                    className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl pl-8 pr-4 py-4 text-xl font-black focus:outline-none focus:border-[#1CA672] transition-colors"
+                    autoFocus
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-2 italic font-medium">Use negative sign (e.g. -50) to subtract money.</p>
+              </div>
             </div>
-            
+
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={() => setWalletModal({ open: false, user: null, amount: '' })}
                 className="flex-1 py-3.5 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleWalletUpdate}
                 disabled={walletModal.loading}
                 className={`flex-1 py-3.5 rounded-xl font-bold text-white transition-all active:scale-95 shadow-lg shadow-green-200 ${walletModal.loading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#1CA672] hover:bg-[#17905F]'}`}
@@ -389,14 +361,14 @@ export default function Customers() {
           <p className="text-gray-500">Manage roles for Admins, Delivery Boys, and Customers</p>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => setFilterReferred(!filterReferred)}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${filterReferred ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
           >
             <Gift size={16} /> {filterReferred ? 'Showing Referred' : 'Filter by Referral'}
           </button>
           {isProAdmin && (
-            <button 
+            <button
               onClick={() => {
                 if (window.confirm('WARNING: This will delete ALL users except admins. This cannot be undone. Proceed?')) {
                   useAdminStore.getState().wipeAllNonAdminUsers();
@@ -436,7 +408,7 @@ export default function Customers() {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-gray-900">{c.name}</p>
-                          {c.accountType === 'guest' || c.id.startsWith('guest_') ? (
+                          {c.id.startsWith('guest_') ? (
                             <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Guest</span>
                           ) : (
                             <span className="text-[9px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border border-green-200">Registered</span>
@@ -451,7 +423,7 @@ export default function Customers() {
                   </td>
                   <td className="p-4 text-sm text-gray-600">
                     <div className="flex flex-col space-y-1">
-                      <span className="flex items-center gap-1 font-medium"><Phone size={14}/> {c.phone}</span>
+                      <span className="flex items-center gap-1 font-medium"><Phone size={14} /> {c.phone}</span>
                     </div>
                   </td>
                   <td className="p-4">
@@ -475,7 +447,7 @@ export default function Customers() {
                     </div>
                   </td>
                   <td className="p-4">
-                    {!(c.accountType === 'guest' || c.id.startsWith('guest_')) ? (
+                    {!c.id.startsWith('guest_') ? (
                       c.role === 'pro_admin' ? (
                         <span className="text-[10px] text-amber-600 font-black bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg">🔒 Master Admin</span>
                       ) : (
@@ -492,7 +464,7 @@ export default function Customers() {
                       )
                     ) : (
                       <div className="text-[10px] text-gray-400 font-medium italic italic leading-tight">
-                        No Account Found<br/>
+                        No Account Found<br />
                         <span className="text-[9px] text-gray-300">(Guest Customer)</span>
                       </div>
                     )}
@@ -503,8 +475,8 @@ export default function Customers() {
                         <p className="text-[10px] font-black uppercase tracking-widest leading-none mb-1 opacity-60">Balance</p>
                         <p className="font-black text-sm leading-none">{formatPrice(c.walletBalance || 0)}</p>
                       </div>
-                      {!(c.accountType === 'guest' || c.id.startsWith('guest_')) && isProAdmin && (
-                        <button 
+                      {!c.id.startsWith('guest_') && isProAdmin && (
+                        <button
                           onClick={() => setWalletModal({ open: true, user: c, amount: '', loading: false })}
                           className="p-2 bg-gray-900 text-white rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-gray-200"
                           title="Adjust Balance"
@@ -522,7 +494,7 @@ export default function Customers() {
                     {c.joinedDate ? new Date(c.joinedDate).toLocaleDateString() : (c.id.startsWith('guest_') ? 'N/A' : 'New User')}
                   </td>
                   <td className="p-4 text-right space-x-2">
-                    <button 
+                    <button
                       onClick={() => handleDelete(c.id)}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors inline-flex"
                     >

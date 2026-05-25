@@ -79,32 +79,40 @@ export default function Checkout() {
         refreshLocationPermission();
     }, []);
 
-    const handleModalAllow = () => {
-        setShowLocationModal(false);
-
+    const requestCurrentLocationAccess = async ({ fromBanner = false } = {}) => {
         if (!navigator.geolocation) {
             toast.error('Your browser does not support location access.');
-            try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
-            return;
+            try { locModalResolver.current && locModalResolver.current(false); } catch (e) {}
+            return false;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            () => {
-                setLocationPermissionState('granted');
-                toast.success('Location enabled! ✅');
-                try { locModalResolver.current && locModalResolver.current(true); } catch(e){}
-            },
-            (error) => {
-                refreshLocationPermission();
-                if (error?.code === error.PERMISSION_DENIED) {
-                    toast.error('Location allow nahi hua. Browser settings me allow karo.');
-                } else {
-                    toast.error('Location fetch nahi ho paayi. Dobara try karo.');
-                }
-                try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
-            },
-            { timeout: 10000 }
-        );
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                () => {
+                    setLocationPermissionState('granted');
+                    setShowLocationModal(false);
+                    toast.success(fromBanner ? 'Current location enabled! ✅' : 'Location enabled! ✅');
+                    try { locModalResolver.current && locModalResolver.current(true); } catch (e) {}
+                    resolve(true);
+                },
+                (error) => {
+                    refreshLocationPermission();
+                    setShowLocationModal(false);
+                    if (error?.code === error.PERMISSION_DENIED) {
+                        toast.error('Location allow nahi hua. Browser settings me allow karo.');
+                    } else {
+                        toast.error('Location fetch nahi ho paayi. Dobara try karo.');
+                    }
+                    try { locModalResolver.current && locModalResolver.current(false); } catch (e) {}
+                    resolve(false);
+                },
+                { timeout: 10000 }
+            );
+        });
+    };
+
+    const handleModalAllow = () => {
+        requestCurrentLocationAccess();
     };
 
     const handleModalCancel = () => {
@@ -112,8 +120,11 @@ export default function Checkout() {
         try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
     };
 
-    const openLocationPrompt = () => {
-        setShowLocationModal(true);
+    const openLocationPrompt = async () => {
+        const granted = await requestCurrentLocationAccess({ fromBanner: true });
+        if (!granted) {
+            setShowLocationModal(true);
+        }
     };
 
     const locationStatusLabel =
@@ -253,34 +264,14 @@ export default function Checkout() {
         if (items.length === 0) { toast.error('Your cart is empty'); return; }
         if (!isAddressComplete) { toast.error('Pehle delivery address fill karo'); setEditingAddress(true); return; }
 
-        // Always require fresh device location before placing an order.
-        // If service-area restriction is enabled, we also validate that the
-        // customer is inside the configured delivery area.
+        // Current location must already be allowed from the banner above.
+        // Order button should not open another browser location prompt.
+        // If service-area restriction is enabled, we validate the active location.
         const isLocationRestrictionEnabled = !!storeSettings?.locationService?.enabled;
         try {
-            // Check permission state first to provide a friendlier UX.
-            try {
-                if (navigator.permissions && navigator.permissions.query) {
-                    const perm = await navigator.permissions.query({ name: 'geolocation' });
-                    if (perm.state === 'prompt') {
-                        // Show our modal and wait for user's action.
-                        const allowed = await new Promise((resolve) => {
-                            locModalResolver.current = resolve;
-                            setShowLocationModal(true);
-                        });
-                        setShowLocationModal(false);
-                        if (!allowed) {
-                            toast.error('Location is required to place an order.');
-                            return;
-                        }
-                    } else if (perm.state === 'denied') {
-                        toast.error('Location permission is denied. Enable it in browser settings and try again.');
-                        return;
-                    }
-                }
-            } catch (permErr) {
-                // ignore and proceed to actual request which will prompt
-                console.warn('Permissions API not available or failed', permErr);
+            if (locationPermissionState !== 'granted') {
+                toast.error('Pehle upar Current Location Allow karo, phir order place karo.');
+                return;
             }
 
             const currentLocation = await locationService.getCurrentLocation();
@@ -302,7 +293,7 @@ export default function Checkout() {
             }
 
             if (!currentLocation) {
-                toast.error('Location permission is required to place an order.');
+                toast.error('Current location nahi mili. Upar wale section se Allow Current Location dabao.');
                 return;
             }
         } catch (locationError) {
