@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { useAdminStore } from './adminStore';
 import { getActiveFlashSaleProducts } from '../utils/flashSale';
 import toast from 'react-hot-toast';
+import { useAuthStore } from './authStore';
 
 export const getAdjustedCartItems = (items) => {
   const adminProducts = useAdminStore.getState().adminProducts || [];
@@ -167,7 +168,11 @@ export const useCartStore = create(
 
         // Expiry date check
         if (coupon.expiryDate) {
-// ... existing code ...
+          const now = new Date();
+          const expiry = new Date(coupon.expiryDate);
+          if (now > expiry) {
+            return { success: false, message: 'This coupon has expired' };
+          }
         }
 
         // Customer-specific coupon validation
