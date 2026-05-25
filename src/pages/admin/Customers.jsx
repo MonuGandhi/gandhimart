@@ -23,6 +23,14 @@ export default function Customers() {
     }
   }, [searchParams]);
 
+  const comparePhones = (phone1, phone2) => {
+    if (!phone1 || !phone2) return false;
+    const p1 = String(phone1).replace(/\D/g, '');
+    const p2 = String(phone2).replace(/\D/g, '');
+    if (p1.length < 10 || p2.length < 10) return p1 === p2;
+    return p1.slice(-10) === p2.slice(-10);
+  };
+
   const customersWithStats = useMemo(() => {
     // Combine registered users and order customers
     const allCustomers = [...registeredUsers];
@@ -30,7 +38,7 @@ export default function Customers() {
     // Add people who ordered but might not be in registeredUsers (guest checkouts if any)
     orders.forEach(order => {
       const phone = order.deliveryAddress?.phone || order.address?.phone;
-      if (phone && !allCustomers.some(c => c.phone === phone)) {
+      if (phone && !allCustomers.some(c => comparePhones(c.phone, phone))) {
         allCustomers.push({
           id: `guest_${order.id}`,
           name: order.deliveryAddress?.fullName || order.address?.name || 'Guest Customer',
@@ -43,7 +51,7 @@ export default function Customers() {
 
     // Calculate stats for each customer
     return allCustomers.map(c => {
-      const customerOrders = orders.filter(o => (o.deliveryAddress?.phone || o.address?.phone) === c.phone);
+      const customerOrders = orders.filter(o => comparePhones(o.deliveryAddress?.phone || o.address?.phone, c.phone));
       const totalSpent = customerOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
       
       // Find who referred this customer (Lookup by their code)

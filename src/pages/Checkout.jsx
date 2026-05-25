@@ -123,8 +123,16 @@ export default function Checkout() {
             toast.error('Naam, phone aur address fill karo');
             return;
         }
+        
+        const cleanedPhone = String(addressForm.phone).replace(/\D/g, '').slice(-10);
+        if (cleanedPhone.length !== 10) {
+            toast.error('Please enter a valid 10-digit mobile number');
+            return;
+        }
+
         try {
-            await saveAddress({ ...addressForm, village: addressForm.village || 'Madhosinghana', id: 'primary' });
+            await saveAddress({ ...addressForm, phone: cleanedPhone, village: addressForm.village || 'Madhosinghana', id: 'primary' });
+            setAddressForm(prev => ({ ...prev, phone: cleanedPhone }));
             setEditingAddress(false);
             toast.success('Address saved to profile! ✅');
         } catch (err) {
@@ -273,11 +281,21 @@ export default function Checkout() {
             return;
         }
 
+        const cleanedPhone = String(addressForm.phone).replace(/\D/g, '').slice(-10);
+        if (cleanedPhone.length !== 10) {
+            toast.error('Please enter a valid 10-digit mobile number');
+            setEditingAddress(true);
+            return;
+        }
+
         setLoading(true);
+
+        const normalizedAddress = { ...addressForm, phone: cleanedPhone };
 
         // Auto-save address to profile if it's complete
         try {
-            await saveAddress({ ...addressForm, village: addressForm.village || 'Madhosinghana', id: 'primary' });
+            await saveAddress({ ...normalizedAddress, village: normalizedAddress.village || 'Madhosinghana', id: 'primary' });
+            setAddressForm(prev => ({ ...prev, phone: cleanedPhone }));
         } catch (err) {
             console.error('Auto-save address error:', err);
             // Non-blocking error, we still want to place the order
@@ -294,8 +312,8 @@ export default function Checkout() {
                 items: items.filter(i => i && i.name), // Safety filter
                 customerName: user?.name || 'Customer',
                 customerEmail: user?.email?.toLowerCase() || '',
-                customerPhone: user?.phone || '',
-                address: deliveryAddress, // Consistency: use 'address' key
+                customerPhone: cleanedPhone || user?.phone || '',
+                address: normalizedAddress, // Consistency: use 'address' key
                 paymentMethod,
                 subtotal: computed.subtotal,
                 productDiscount: computed.productDiscount,

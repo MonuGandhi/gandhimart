@@ -51,10 +51,17 @@ export default function Dashboard() {
   
   // Dynamic unique customers count (Orders + Registered Users)
   const totalCustomersCount = useMemo(() => {
-    const uniqueCustomerPhones = new Set([
-      ...orders.map(o => o.deliveryAddress?.phone || o.address?.phone),
-      ...registeredUsers.map(u => u.phone)
-    ].filter(Boolean));
+    const uniqueCustomerPhones = new Set(
+      [
+        ...orders.map(o => o.deliveryAddress?.phone || o.address?.phone),
+        ...registeredUsers.map(u => u.phone)
+      ]
+      .filter(Boolean)
+      .map(phone => {
+        const cleaned = String(phone).replace(/\D/g, '');
+        return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
+      })
+    );
     return uniqueCustomerPhones.size;
   }, [orders, registeredUsers]);
 
@@ -228,10 +235,17 @@ export default function Dashboard() {
   const customerInsights = useMemo(() => {
     const customerMap = {};
 
+    const cleanPhone = (p) => {
+      if (!p) return '';
+      const cleaned = String(p).replace(/\D/g, '');
+      return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
+    };
+
     // Build customer data from orders
     orders.forEach(order => {
-      const phone = order.deliveryAddress?.phone || order.address?.phone;
+      const rawPhone = order.deliveryAddress?.phone || order.address?.phone;
       const name = order.deliveryAddress?.fullName || order.address?.name || 'Unknown';
+      const phone = cleanPhone(rawPhone);
 
       if (!phone) return;
 
@@ -262,9 +276,12 @@ export default function Dashboard() {
 
     // Add registered users who haven't ordered
     registeredUsers.forEach(user => {
-      if (!customerMap[user.phone]) {
-        customerMap[user.phone] = {
-          phone: user.phone,
+      const phone = cleanPhone(user.phone);
+      if (!phone) return;
+
+      if (!customerMap[phone]) {
+        customerMap[phone] = {
+          phone,
           name: user.name || user.fullName || 'Unknown',
           email: user.email,
           totalOrders: 0,
@@ -275,6 +292,9 @@ export default function Dashboard() {
           signupDate: user.createdAt || new Date(),
           isRegisteredOnly: true
         };
+      } else {
+        if (user.email) customerMap[phone].email = user.email;
+        customerMap[phone].signupDate = user.createdAt || new Date();
       }
     });
 

@@ -13,12 +13,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function checkUsersAndNotifications() {
+async function checkUsersAndOrders() {
   try {
-    console.log("\nFetching recent notifications...");
-    const notifsSnap = await getDocs(query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(10)));
-    const notifications = notifsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log("Recent Notifications:", JSON.stringify(notifications, null, 2));
+    console.log("\nFetching recent users...");
+    const usersSnap = await getDocs(query(collection(db, 'users'), limit(20)));
+    const users = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log("Users:");
+    users.forEach(u => console.log(`- ID: ${u.id}, Name: ${u.name}, Phone: ${u.phone}, Email: ${u.email}`));
+
+    console.log("\nFetching recent orders...");
+    const ordersSnap = await getDocs(query(collection(db, 'orders'), orderBy('placedAt', 'desc'), limit(10)));
+    const orders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log("Orders:");
+    orders.forEach(o => {
+      console.log(`- ID: ${o.id}, Status: ${o.status}, PlacedAt: ${o.placedAt}`);
+      console.log(`  CustomerEmail: ${o.customerEmail}, Phone: ${o.phone}`);
+      console.log(`  deliveryAddress phone: ${o.deliveryAddress?.phone}, address phone: ${o.address?.phone}`);
+    });
 
     process.exit(0);
   } catch (err) {
@@ -27,4 +38,4 @@ async function checkUsersAndNotifications() {
   }
 }
 
-checkUsersAndNotifications();
+checkUsersAndOrders();
