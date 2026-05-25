@@ -170,12 +170,16 @@ export const useCartStore = create(
 
         // Customer-specific coupon validation
         if (coupon.targetType === 'specific') {
+          // This check is now more robust. It will only pass if both emails exist and are a case-insensitive match.
+          const isMatch = !!user?.email && !!coupon.targetEmail && (user.email.toLowerCase() === coupon.targetEmail.toLowerCase());
+
           console.log("COUPON DEBUG:", {
             couponTarget: coupon.targetEmail,
             userEmail: user?.email,
-            areEqual: String(coupon.targetEmail)?.toLowerCase() === String(user?.email)?.toLowerCase()
+            areEqual: isMatch
           });
-          if (!user?.email || String(coupon.targetEmail)?.toLowerCase() !== String(user.email)?.toLowerCase()) {
+
+          if (!isMatch) {
             return { success: false, message: 'This coupon is not valid for your account' };
           }
         }
