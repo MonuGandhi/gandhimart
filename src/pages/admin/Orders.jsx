@@ -483,6 +483,14 @@ export default function Orders() {
                     <p className="font-bold text-gray-900">#{o.id}</p>
                     <p className="text-xs text-gray-500">{new Date(o.placedAt).toLocaleString()}</p>
                     <p className="text-xs text-gray-500 mt-1">{o.items?.length || 0} items</p>
+                    {o.couponCode && (
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <Gift size={14} className="text-orange-500" />
+                        <span className="font-bold text-xs text-orange-600 bg-orange-100 border border-orange-200 px-2 py-0.5 rounded-full">
+                          {o.couponCode}
+                        </span>
+                      </div>
+                    )}
                     {o.udhaarAdded && (
                       <span className="inline-flex mt-2 bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-black">
                         Udhaar ✓
