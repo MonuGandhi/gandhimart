@@ -170,7 +170,12 @@ export const useCartStore = create(
 
         // Customer-specific coupon validation
         if (coupon.targetType === 'specific') {
-          if (!user?.phone || coupon.targetPhone !== user.phone) {
+          console.log("COUPON DEBUG:", {
+            couponTarget: coupon.targetPhone,
+            userPhone: user?.phone,
+            areEqual: String(coupon.targetPhone) === String(user?.phone)
+          });
+          if (!user?.phone || String(coupon.targetPhone) !== String(user.phone)) {
             return { success: false, message: 'This coupon is not valid for your account' };
           }
         }

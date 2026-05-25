@@ -81,7 +81,12 @@ service cloud.firestore {
       allow read: if docId != 'admins'; 
       allow write: if hasAdminAccess(); 
     }
-    match /coupons/{docId} { allow read: if true; allow write: if hasAdminAccess(); }
+    match /coupons/{docId} { 
+      allow read: if true; 
+      allow write: if hasAdminAccess();
+      allow update: if hasAdminAccess() || 
+        (currentUserEmail() != "" && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount']));
+    }
 
     // Notifications: anyone can read (global promos), only admin can write
     match /notifications/{docId} {
