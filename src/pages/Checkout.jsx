@@ -80,26 +80,36 @@ export default function Checkout() {
     }, []);
 
     const handleModalAllow = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                () => {
-                    setLocationPermissionState('granted');
-                    try { locModalResolver.current && locModalResolver.current(true); } catch(e){}
-                },
-                () => {
-                    refreshLocationPermission();
-                    try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
-                },
-                { timeout: 10000 }
-            );
-        } else {
+        setShowLocationModal(false);
+
+        if (!navigator.geolocation) {
+            toast.error('Your browser does not support location access.');
             try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
+            return;
         }
+
+        navigator.geolocation.getCurrentPosition(
+            () => {
+                setLocationPermissionState('granted');
+                toast.success('Location enabled! ✅');
+                try { locModalResolver.current && locModalResolver.current(true); } catch(e){}
+            },
+            (error) => {
+                refreshLocationPermission();
+                if (error?.code === error.PERMISSION_DENIED) {
+                    toast.error('Location allow nahi hua. Browser settings me allow karo.');
+                } else {
+                    toast.error('Location fetch nahi ho paayi. Dobara try karo.');
+                }
+                try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
+            },
+            { timeout: 10000 }
+        );
     };
 
     const handleModalCancel = () => {
-        try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
         setShowLocationModal(false);
+        try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
     };
 
     const openLocationPrompt = () => {
