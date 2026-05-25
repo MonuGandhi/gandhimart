@@ -171,11 +171,11 @@ export const useCartStore = create(
         // Customer-specific coupon validation
         if (coupon.targetType === 'specific') {
           console.log("COUPON DEBUG:", {
-            couponTarget: coupon.targetPhone,
-            userPhone: user?.phone,
-            areEqual: String(coupon.targetPhone) === String(user?.phone)
+            couponTarget: coupon.targetEmail,
+            userEmail: user?.email,
+            areEqual: String(coupon.targetEmail)?.toLowerCase() === String(user?.email)?.toLowerCase()
           });
-          if (!user?.phone || String(coupon.targetPhone) !== String(user.phone)) {
+          if (!user?.email || String(coupon.targetEmail)?.toLowerCase() !== String(user.email)?.toLowerCase()) {
             return { success: false, message: 'This coupon is not valid for your account' };
           }
         }
