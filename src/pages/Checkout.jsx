@@ -99,7 +99,7 @@ export default function Checkout() {
                     refreshLocationPermission();
                     setShowLocationModal(false);
                     if (error?.code === error.PERMISSION_DENIED) {
-                        toast.error('Location allow nahi hua. Browser settings me allow karo.');
+                        toast.error('Location block kar di gayi hai. Upar URL bar me Tala (🔒) icon par click karke Allow karein.');
                     } else {
                         toast.error('Location fetch nahi ho paayi. Dobara try karo.');
                     }
@@ -112,7 +112,7 @@ export default function Checkout() {
     };
 
     const handleModalAllow = () => {
-        requestCurrentLocationAccess();
+        requestCurrentLocationAccess({ fromBanner: true });
     };
 
     const handleModalCancel = () => {
@@ -121,8 +121,12 @@ export default function Checkout() {
     };
 
     const openLocationPrompt = async () => {
-        const granted = await requestCurrentLocationAccess({ fromBanner: true });
-        if (!granted) {
+        if (locationPermissionState === 'granted') {
+            await requestCurrentLocationAccess({ fromBanner: true });
+        } else if (locationPermissionState === 'denied') {
+            toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
+        } else {
+            // Soft Prompt: Show custom explanation modal first, don't trigger native prompt directly
             setShowLocationModal(true);
         }
     };
@@ -270,7 +274,13 @@ export default function Checkout() {
         const isLocationRestrictionEnabled = !!storeSettings?.locationService?.enabled;
         try {
             if (locationPermissionState !== 'granted') {
-                toast.error('Pehle upar Current Location Allow karo, phir order place karo.');
+                if (locationPermissionState === 'denied') {
+                    toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
+                } else {
+                    // Soft Prompt: Show modal first instead of just failing with a raw error
+                    setShowLocationModal(true);
+                    toast('Pehle location access chalu karein! 😊', { icon: '📍' });
+                }
                 return;
             }
 
