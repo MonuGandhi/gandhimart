@@ -13,7 +13,7 @@ import { useNotificationStore } from '../store/notificationsStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import toast from 'react-hot-toast';
 import { auth, db } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, getRedirectResult, signInWithPopup, signInWithRedirect } from "firebase/auth";
 import { collection, query, orderBy, getDocs, getDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 
 // ── Bottom Sheet Modal Wrapper ──────────────────────────────────────────────
@@ -78,6 +78,32 @@ export default function Profile() {
   const [showWalletHistory, setShowWalletHistory] = useState(false);
   const [walletTx, setWalletTx] = useState([]);
   const [loadingWalletTx, setLoadingWalletTx] = useState(false);
+
+  useEffect(() => {
+    const finalizeRedirectSignIn = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (!result?.user) return;
+
+        const googleUser = result.user;
+        setTempUser({
+          name: googleUser.displayName || 'Customer',
+          email: googleUser.email,
+          photoURL: googleUser.photoURL,
+          uid: googleUser.uid,
+        });
+        setNeedsPhone(true);
+        toast.success(`Welcome ${googleUser.displayName || 'Customer'}!`);
+      } catch (error) {
+        console.error('Redirect sign-in error:', error);
+        if (error?.code) {
+          toast.error(`Sign-In Error: ${error.message}`);
+        }
+      }
+    };
+
+    finalizeRedirectSignIn();
+  }, []);
 
   const fetchWalletHistory = async () => {
     if (!user?.email) return;
@@ -216,7 +242,15 @@ export default function Profile() {
       toast.success(`Welcome ${googleUser.displayName || 'Customer'}!`);
     } catch (error) {
       console.error("Sign-in error details:", error);
-      if (error.code === 'auth/unauthorized-domain') {
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectError) {
+          console.error('Redirect fallback error:', redirectError);
+          toast.error(`Sign-In Error: ${redirectError.message}`);
+        }
+      } else if (error.code === 'auth/unauthorized-domain') {
         toast.error('Domain not authorized in Firebase Console! Please check Step 1.');
       } else {
         toast.error(`Sign-In Error: ${error.message}`);
