@@ -242,6 +242,94 @@
   border-color: #1a2235 !important;
 }
 
+/* Admin Dashboard Dark Theme Fixes */
+.dark .admin-dashboard .bg-white,
+.dark .admin-dashboard .bg-white\/60,
+.dark .admin-dashboard .bg-white\/70,
+.dark .admin-dashboard .bg-white\/80,
+.dark .admin-dashboard .bg-white\/90,
+.dark .admin-dashboard .bg-gradient-to-br.from-white.to-gray-50,
+.dark .admin-dashboard .bg-gradient-to-br.from-white.to-gray-50\/50,
+.dark .admin-dashboard .bg-gray-50,
+.dark .admin-dashboard .bg-gray-100 {
+  background-color: #0b0f19 !important;
+  background-image: none !important;
+  border-color: #1a2235 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .admin-dashboard .bg-white\/60,
+.dark .admin-dashboard .bg-white\/70,
+.dark .admin-dashboard .bg-white\/80,
+.dark .admin-dashboard .bg-white\/90 {
+  background-color: rgba(11, 15, 25, 0.92) !important;
+}
+
+.dark .admin-dashboard .border-gray-100,
+.dark .admin-dashboard .border-gray-200,
+.dark .admin-dashboard .border-blue-100,
+.dark .admin-dashboard .border-indigo-100,
+.dark .admin-dashboard .border-orange-100,
+.dark .admin-dashboard .border-orange-200,
+.dark .admin-dashboard .border-purple-100,
+.dark .admin-dashboard .border-purple-200,
+.dark .admin-dashboard .border-amber-100,
+.dark .admin-dashboard .border-amber-200,
+.dark .admin-dashboard .border-green-100,
+.dark .admin-dashboard .border-green-200,
+.dark .admin-dashboard .border-red-100,
+.dark .admin-dashboard .border-red-200,
+.dark .admin-dashboard .border-yellow-100,
+.dark .admin-dashboard .border-yellow-200 {
+  border-color: #1a2235 !important;
+}
+
+.dark .admin-dashboard .text-gray-900,
+.dark .admin-dashboard .text-gray-800,
+.dark .admin-dashboard .text-gray-700,
+.dark .admin-dashboard .text-gray-600,
+.dark .admin-dashboard .text-gray-500,
+.dark .admin-dashboard .text-gray-400,
+.dark .admin-dashboard .text-gray-300 {
+  color: #e5e7eb !important;
+}
+
+.dark .admin-dashboard .bg-gray-50.border-gray-100,
+.dark .admin-dashboard .bg-gray-100,
+.dark .admin-dashboard .hover\:bg-gray-50:hover,
+.dark .admin-dashboard .hover\:bg-gray-100:hover {
+  background-color: #121824 !important;
+}
+
+.dark .admin-dashboard .bg-gradient-to-br.from-blue-50.to-indigo-50,
+.dark .admin-dashboard .bg-gradient-to-br.from-orange-50.to-red-50,
+.dark .admin-dashboard .bg-gradient-to-br.from-purple-100.to-pink-100,
+.dark .admin-dashboard .bg-gradient-to-br.from-white.to-gray-50 {
+  background: linear-gradient(180deg, rgba(11,15,25,0.95), rgba(18,24,36,0.95)) !important;
+}
+
+.dark .admin-dashboard .bg-blue-50,
+.dark .admin-dashboard .bg-indigo-50,
+.dark .admin-dashboard .bg-orange-50,
+.dark .admin-dashboard .bg-purple-50,
+.dark .admin-dashboard .bg-green-50,
+.dark .admin-dashboard .bg-amber-50,
+.dark .admin-dashboard .bg-red-50,
+.dark .admin-dashboard .bg-yellow-100,
+.dark .admin-dashboard .bg-red-100,
+.dark .admin-dashboard .bg-orange-100,
+.dark .admin-dashboard .bg-purple-100,
+.dark .admin-dashboard .bg-green-100,
+.dark .admin-dashboard .bg-amber-100 {
+  background-color: rgba(18, 24, 36, 0.9) !important;
+}
+
+.dark .admin-dashboard .shadow-sm,
+.dark .admin-dashboard .shadow-md,
+.dark .admin-dashboard .shadow-lg {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+}
+
 /* Rating badge adjustments */
 .dark .bg-amber-50 {
   background-color: rgba(217, 119, 6, 0.15) !important;
