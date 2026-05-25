@@ -289,6 +289,11 @@ export default function Profile() {
           referralCode: savedRefCode 
         });
         
+        // This is the important part: update the local auth store state
+        // so that other components (like the coupon checker) have the phone number
+        // immediately, without waiting for the next Firestore sync.
+        useAuthStore.getState().updateUser({ phone });
+
         login(tempUser.name, phone, tempUser.email, tempUser.photoURL, tempUser.uid);
         
         if (savedRefCode) {

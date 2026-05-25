@@ -33,6 +33,12 @@ export const useAuthStore = create(
         useOrdersStore.getState().initFirebase(email, isAdmin);
       },
 
+      updateUser: (userData) => {
+        set(state => ({
+          user: { ...state.user, ...userData }
+        }));
+      },
+
       initFirebase: (email) => {
         if (!email) return;
         const normalizedEmail = email.toLowerCase();
