@@ -179,12 +179,6 @@ export const useCartStore = create(
         if (coupon.targetType === 'specific') {
           const isMatch = !!user?.phone && !!coupon.targetPhone && (user.phone === coupon.targetPhone);
 
-          console.log("COUPON DEBUG:", {
-            couponTarget: coupon.targetPhone,
-            userPhone: user?.phone,
-            areEqual: isMatch
-          });
-
           if (!isMatch) {
             return { success: false, message: 'This coupon is not valid for your account' };
           }
