@@ -59,15 +59,35 @@ export default function Checkout() {
     const [referralInput, setReferralInput] = useState('');
     const [appliedReferral, setAppliedReferral] = useState(null); // { code, referrerName }
     const [showLocationModal, setShowLocationModal] = useState(false);
+    const [locationPermissionState, setLocationPermissionState] = useState('unknown');
     const locModalResolver = useRef(null);
+
+    const refreshLocationPermission = async () => {
+        try {
+            if (navigator.permissions && navigator.permissions.query) {
+                const perm = await navigator.permissions.query({ name: 'geolocation' });
+                setLocationPermissionState(perm.state);
+                perm.onchange = () => setLocationPermissionState(perm.state);
+            }
+        } catch (err) {
+            console.warn('Unable to read geolocation permission state:', err);
+            setLocationPermissionState('unknown');
+        }
+    };
+
+    useEffect(() => {
+        refreshLocationPermission();
+    }, []);
 
     const handleModalAllow = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 () => {
+                    setLocationPermissionState('granted');
                     try { locModalResolver.current && locModalResolver.current(true); } catch(e){}
                 },
                 () => {
+                    refreshLocationPermission();
                     try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
                 },
                 { timeout: 10000 }
@@ -81,6 +101,22 @@ export default function Checkout() {
         try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
         setShowLocationModal(false);
     };
+
+    const openLocationPrompt = () => {
+        setShowLocationModal(true);
+    };
+
+    const locationStatusLabel =
+        locationPermissionState === 'granted' ? 'Location ON' :
+        locationPermissionState === 'denied' ? 'Location Blocked' :
+        'Allow Location';
+
+    const locationStatusClass =
+        locationPermissionState === 'granted'
+            ? 'bg-green-100 text-green-700 border-green-200'
+            : locationPermissionState === 'denied'
+                ? 'bg-red-100 text-red-700 border-red-200'
+                : 'bg-amber-100 text-amber-700 border-amber-200';
 
 
 
@@ -386,6 +422,32 @@ export default function Checkout() {
     return (
         <Layout hideBottomNav>
             <div className="max-w-2xl mx-auto px-4 py-6 pb-48 space-y-4">
+
+                {/* Current Location Reminder */}
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shrink-0 border border-amber-100 shadow-sm">
+                            <MapPin size={20} className="text-amber-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Current Location Required</h2>
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full border ${locationStatusClass}`}>
+                                    {locationStatusLabel}
+                                </span>
+                            </div>
+                            <p className="text-sm text-gray-700 font-medium leading-relaxed">
+                                Order place karne ke liye current location ON hona zaroori hai. Jab aap <span className="font-black">Place Order</span> dabayenge, tab browser location allow karne ka popup aayega.
+                            </p>
+                            <button
+                                onClick={openLocationPrompt}
+                                className="mt-3 inline-flex items-center gap-2 bg-[#1CA672] text-white font-black px-4 py-2.5 rounded-2xl text-sm active:scale-95 transition-transform shadow-lg shadow-green-500/20"
+                            >
+                                <MapPin size={16} /> Allow Current Location
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 {/* Header */}
                 <div className="flex items-center gap-3 mb-2">
