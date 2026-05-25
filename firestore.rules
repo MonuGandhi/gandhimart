@@ -135,16 +135,10 @@ service cloud.firestore {
     // Users: Admins can do anything. Users can read/update their own profile.
     match /users/{userId} {
       allow read: if hasAdminAccess() || isOwner(userId);
-      allow create: if isOwner(userId);
-      
-      // Allow users to update their own profile, but PREVENT them from manually changing sensitive fields
+      allow create: if currentUserEmail() != "";
       allow update: if hasAdminAccess() || 
         (isOwner(userId) && 
-         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'staffPin']) &&
-         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['walletBalance']) || 
-          (request.resource.data.walletBalance < resource.data.walletBalance && request.resource.data.walletBalance >= 0))
-        );
-        
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['savedAddresses', 'name', 'phone', 'fcmToken', 'walletBalance', 'referredBy', 'usedCoupons']));
       allow delete: if hasAdminAccess();
     }
 
