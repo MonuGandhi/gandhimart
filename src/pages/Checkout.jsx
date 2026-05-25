@@ -14,7 +14,7 @@ import {
     MapPin, Tag, Wallet, Smartphone, Truck,
     CheckCircle2, Zap, X, ArrowLeft, Edit2, Gift, ChevronRight, ShoppingBag
 } from 'lucide-react';
-import { writeBatch, doc, increment, getDoc, collection } from 'firebase/firestore';
+import { writeBatch, doc, increment, getDoc, collection, arrayUnion } from 'firebase/firestore';
 import { db } from '../firebase';
 import { logWalletTransaction } from '../utils/wallet';
 
@@ -204,7 +204,7 @@ export default function Checkout() {
 
     const handleApplyCoupon = () => {
         if (!couponCode.trim()) return;
-        const result = applyCoupon(couponCode.trim(), user?.phone);
+        const result = applyCoupon(couponCode.trim(), user);
         if (result.success) toast.success(result.message);
         else toast.error(result.message);
         setCouponCode('');
@@ -399,11 +399,16 @@ export default function Checkout() {
                 });
             }
 
-            // Increment coupon usedCount in Firestore
-            if (appliedCoupon?.code) {
+            // Increment coupon usedCount and add to user's used list
+            if (appliedCoupon?.code && user?.email) {
                 const couponRef = doc(db, 'coupons', appliedCoupon.code);
                 batch.update(couponRef, {
                     usedCount: increment(1)
+                });
+
+                const userRef = doc(db, 'users', user.email.toLowerCase());
+                batch.update(userRef, {
+                    usedCoupons: arrayUnion(appliedCoupon.code)
                 });
             }
 

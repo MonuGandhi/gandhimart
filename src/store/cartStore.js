@@ -146,32 +146,31 @@ export const useCartStore = create(
 
       clearCart: () => set({ items: [], appliedCoupon: null }),
 
-      applyCoupon: (code, userPhone = '') => {
+      applyCoupon: (code, user) => {
         const { adminCoupons } = useAdminStore.getState();
         const coupon = adminCoupons.find(
           (c) => c.code === code.toUpperCase() && c.isActive
         );
         if (!coupon) return { success: false, message: 'Invalid coupon code' };
 
-        // Usage limit check
+        // Per-customer usage limit check
+        if (user?.usedCoupons?.includes(coupon.code)) {
+          return { success: false, message: 'You have already used this coupon' };
+        }
+
+        // Global usage limit check
         if (coupon.limit && (coupon.usedCount || 0) >= coupon.limit) {
           return { success: false, message: 'This coupon has reached its usage limit' };
         }
 
         // Expiry date check
         if (coupon.expiryDate) {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const expiry = new Date(coupon.expiryDate);
-          expiry.setHours(23, 59, 59, 999);
-          if (today > expiry) {
-            return { success: false, message: 'This coupon has expired' };
-          }
+// ... existing code ...
         }
 
         // Customer-specific coupon validation
         if (coupon.targetType === 'specific') {
-          if (!userPhone || coupon.targetPhone !== userPhone) {
+          if (!user?.phone || coupon.targetPhone !== user.phone) {
             return { success: false, message: 'This coupon is not valid for your account' };
           }
         }
