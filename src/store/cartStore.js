@@ -153,6 +153,22 @@ export const useCartStore = create(
         );
         if (!coupon) return { success: false, message: 'Invalid coupon code' };
 
+        // Usage limit check
+        if (coupon.limit && (coupon.usedCount || 0) >= coupon.limit) {
+          return { success: false, message: 'This coupon has reached its usage limit' };
+        }
+
+        // Expiry date check
+        if (coupon.expiryDate) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const expiry = new Date(coupon.expiryDate);
+          expiry.setHours(23, 59, 59, 999);
+          if (today > expiry) {
+            return { success: false, message: 'This coupon has expired' };
+          }
+        }
+
         // Customer-specific coupon validation
         if (coupon.targetType === 'specific') {
           if (!userPhone || coupon.targetPhone !== userPhone) {

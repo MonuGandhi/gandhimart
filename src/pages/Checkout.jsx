@@ -399,6 +399,14 @@ export default function Checkout() {
                 });
             }
 
+            // Increment coupon usedCount in Firestore
+            if (appliedCoupon?.code) {
+                const couponRef = doc(db, 'coupons', appliedCoupon.code);
+                batch.update(couponRef, {
+                    usedCount: increment(1)
+                });
+            }
+
             await batch.commit();
             clearCart();
             navigate(`/order-success?id=${orderId}`);
@@ -598,10 +606,30 @@ export default function Checkout() {
                                 <div className="space-y-2 pt-2 border-t border-gray-100">
                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Available Coupons</p>
                                     {adminCoupons && adminCoupons
-                                        .filter(c => c.isActive && (c.targetType === 'global' || (user?.phone && c.targetPhone === user.phone)))
+                                        .filter(c => {
+                                            if (!c.isActive) return false;
+                                            if (c.targetType !== 'global' && !(user?.phone && c.targetPhone === user.phone)) return false;
+                                            if (c.limit && (c.usedCount || 0) >= c.limit) return false;
+                                            if (c.expiryDate) {
+                                                const today = new Date(); today.setHours(0,0,0,0);
+                                                const expiry = new Date(c.expiryDate); expiry.setHours(23,59,59,999);
+                                                if (today > expiry) return false;
+                                            }
+                                            return true;
+                                        })
                                         .length > 0 ? (
                                         adminCoupons
-                                            .filter(c => c.isActive && (c.targetType === 'global' || (user?.phone && c.targetPhone === user.phone)))
+                                            .filter(c => {
+                                                if (!c.isActive) return false;
+                                                if (c.targetType !== 'global' && !(user?.phone && c.targetPhone === user.phone)) return false;
+                                                if (c.limit && (c.usedCount || 0) >= c.limit) return false;
+                                                if (c.expiryDate) {
+                                                    const today = new Date(); today.setHours(0,0,0,0);
+                                                    const expiry = new Date(c.expiryDate); expiry.setHours(23,59,59,999);
+                                                    if (today > expiry) return false;
+                                                }
+                                                return true;
+                                            })
                                             .map((c) => (
                                                 <button
                                                     key={c.code}
