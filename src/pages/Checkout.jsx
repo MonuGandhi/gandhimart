@@ -7,6 +7,7 @@ import { useOrdersStore } from '../store/ordersStore';
 import { useAdminStore } from '../store/adminStore';
 import { formatPrice } from '../utils/helpers';
 import locationService from '../utils/locationService';
+import LocationPermissionModal from '../components/LocationPermissionModal';
 
 import toast from 'react-hot-toast';
 import {
@@ -57,6 +58,29 @@ export default function Checkout() {
     const [useWallet, setUseWallet] = useState(false);
     const [referralInput, setReferralInput] = useState('');
     const [appliedReferral, setAppliedReferral] = useState(null); // { code, referrerName }
+    const [showLocationModal, setShowLocationModal] = useState(false);
+    const locModalResolver = useRef(null);
+
+    const handleModalAllow = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                () => {
+                    try { locModalResolver.current && locModalResolver.current(true); } catch(e){}
+                },
+                () => {
+                    try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
+                },
+                { timeout: 10000 }
+            );
+        } else {
+            try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
+        }
+    };
+
+    const handleModalCancel = () => {
+        try { locModalResolver.current && locModalResolver.current(false); } catch(e){}
+        setShowLocationModal(false);
+    };
 
 
 
@@ -180,6 +204,31 @@ export default function Checkout() {
         // customer is inside the configured delivery area.
         const isLocationRestrictionEnabled = !!storeSettings?.locationService?.enabled;
         try {
+            // Check permission state first to provide a friendlier UX.
+            try {
+                if (navigator.permissions && navigator.permissions.query) {
+                    const perm = await navigator.permissions.query({ name: 'geolocation' });
+                    if (perm.state === 'prompt') {
+                        // Show our modal and wait for user's action.
+                        const allowed = await new Promise((resolve) => {
+                            locModalResolver.current = resolve;
+                            setShowLocationModal(true);
+                        });
+                        setShowLocationModal(false);
+                        if (!allowed) {
+                            toast.error('Location is required to place an order.');
+                            return;
+                        }
+                    } else if (perm.state === 'denied') {
+                        toast.error('Location permission is denied. Enable it in browser settings and try again.');
+                        return;
+                    }
+                }
+            } catch (permErr) {
+                // ignore and proceed to actual request which will prompt
+                console.warn('Permissions API not available or failed', permErr);
+            }
+
             const currentLocation = await locationService.getCurrentLocation();
 
             if (isLocationRestrictionEnabled) {
@@ -297,16 +346,19 @@ export default function Checkout() {
 
     if (items.length === 0) {
         return (
-            <Layout hideBottomNav>
-                <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
-                    <ShoppingBag size={56} className="text-gray-200 mb-4" />
-                    <h2 className="text-xl font-black text-gray-800 mb-2">Cart is empty</h2>
-                    <p className="text-gray-400 mb-6 text-sm">Add some items before checking out</p>
-                    <button onClick={() => navigate('/')} className="bg-[#1CA672] text-white font-black px-8 py-3 rounded-2xl active:scale-95 transition-transform">
-                        Start Shopping
-                    </button>
-                </div>
-            </Layout>
+            <>
+                <Layout hideBottomNav>
+                    <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+                        <ShoppingBag size={56} className="text-gray-200 mb-4" />
+                        <h2 className="text-xl font-black text-gray-800 mb-2">Cart is empty</h2>
+                        <p className="text-gray-400 mb-6 text-sm">Add some items before checking out</p>
+                        <button onClick={() => navigate('/')} className="bg-[#1CA672] text-white font-black px-8 py-3 rounded-2xl active:scale-95 transition-transform">
+                            Start Shopping
+                        </button>
+                    </div>
+                </Layout>
+                <LocationPermissionModal open={showLocationModal} onAllow={handleModalAllow} onCancel={handleModalCancel} />
+            </>
         );
     }
 
@@ -713,6 +765,7 @@ export default function Checkout() {
                     </button>
                 </div>
             </div>
+            <LocationPermissionModal open={showLocationModal} onAllow={handleModalAllow} onCancel={handleModalCancel} />
         </Layout>
     );
 }
