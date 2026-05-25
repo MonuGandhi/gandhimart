@@ -146,8 +146,10 @@ export const useCartStore = create(
 
       clearCart: () => set({ items: [], appliedCoupon: null }),
 
-      applyCoupon: (code, user) => {
+      applyCoupon: (code) => {
         const { adminCoupons } = useAdminStore.getState();
+        const { user } = useAuthStore.getState(); // Get user directly from the auth store
+
         const coupon = adminCoupons.find(
           (c) => c.code === code.toUpperCase() && c.isActive
         );

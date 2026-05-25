@@ -204,7 +204,7 @@ export default function Checkout() {
 
     const handleApplyCoupon = () => {
         if (!couponCode.trim()) return;
-        const result = applyCoupon(couponCode.trim(), user);
+        const result = applyCoupon(couponCode.trim());
         if (result.success) toast.success(result.message);
         else toast.error(result.message);
         setCouponCode('');
@@ -639,7 +639,7 @@ export default function Checkout() {
                                                 <button
                                                     key={c.code}
                                                     onClick={() => {
-                                                        const result = applyCoupon(c.code, user?.phone);
+                                                        const result = applyCoupon(c.code);
                                                         if (result.success) toast.success(result.message);
                                                         else toast.error(result.message);
                                                     }}
