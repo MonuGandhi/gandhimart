@@ -425,20 +425,20 @@ export default function Checkout() {
             <div className="max-w-2xl mx-auto px-4 py-6 pb-48 space-y-4">
 
                 {/* Current Location Reminder */}
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-3xl p-4 shadow-sm">
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-800 dark:to-gray-800/80 border border-amber-200 dark:border-gray-700 rounded-3xl p-4 shadow-sm">
                     <div className="flex items-start gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center shrink-0 border border-amber-100 shadow-sm">
-                            <MapPin size={20} className="text-amber-600" />
+                        <div className="w-11 h-11 rounded-2xl bg-white/80 dark:bg-gray-900/80 flex items-center justify-center shrink-0 border border-amber-100 dark:border-gray-700 shadow-sm">
+                            <MapPin size={20} className="text-amber-600 dark:text-amber-500" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
-                                <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Current Location Required</h2>
+                                <h2 className="text-sm font-black text-gray-900 dark:text-gray-100 uppercase tracking-wider">Current Location Required</h2>
                                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full border ${locationStatusClass}`}>
                                     {locationStatusLabel}
                                 </span>
                             </div>
-                            <p className="text-sm text-gray-700 font-medium leading-relaxed">
-                                Order place karne ke liye current location ON hona zaroori hai. Jab aap <span className="font-black">Place Order</span> dabayenge, tab browser location allow karne ka popup aayega.
+                            <p className="text-sm text-gray-700 dark:text-gray-400 font-medium leading-relaxed">
+                                Order place karne ke liye current location ON hona zaroori hai. Jab aap <span className="font-black text-gray-800 dark:text-gray-200">Place Order</span> dabayenge, tab browser location allow karne ka popup aayega.
                             </p>
                             <button
                                 onClick={openLocationPrompt}
