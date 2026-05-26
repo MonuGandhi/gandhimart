@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, Plus, Edit, Trash2, Eye, Upload, X } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, Upload, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAdminStore } from '../../store/adminStore';
 import { formatPrice } from '../../utils/helpers';
 import { getOptimizedImageUrl } from '../../utils/imageUtils';
@@ -75,15 +75,20 @@ export default function Products() {
       updateProduct(editingProduct.id, payload);
       toast.success('Product updated!');
     } else {
-      // ID is handled by addProduct in store (prod_${Date.now()})
+      // Auto-assign displayOrder for new products
+      const categoryId = Number(formData.categoryId);
+      const categoryProducts = products.filter(p => p.categoryId === categoryId);
+      const maxOrder = categoryProducts.reduce((max, p) => Math.max(max, p.displayOrder || 0), 0);
+
       addProduct({
         ...payload,
+        displayOrder: maxOrder + 1,
         rating: 0,
         reviewCount: 0,
       });
       toast.success('Product added!');
     }
-    
+
     setShowAddModal(false);
     setEditingProduct(null);
   };
@@ -106,6 +111,26 @@ export default function Products() {
   const toggleStock = (product) => {
     updateProduct(product.id, { inStock: !product.inStock });
     toast.success(product.inStock ? 'Marked as Out of Stock' : 'Marked as In Stock');
+  };
+
+  const moveProduct = (product, direction) => {
+    const categoryId = String(product.categoryId || 'uncategorized');
+    const categoryProducts = products
+      .filter(p => String(p.categoryId || 'uncategorized') === categoryId)
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+
+    const currentIndex = categoryProducts.findIndex(p => p.id === product.id);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= categoryProducts.length) return;
+
+    const currentOrder = categoryProducts[currentIndex].displayOrder || 0;
+    const targetOrder = categoryProducts[targetIndex].displayOrder || 0;
+
+    updateProduct(categoryProducts[currentIndex].id, { displayOrder: targetOrder });
+    updateProduct(categoryProducts[targetIndex].id, { displayOrder: currentOrder });
+    toast.success(`Moved ${direction === 'up' ? 'up' : 'down'}!`);
   };
 
   return (
@@ -209,17 +234,17 @@ export default function Products() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {group.products.map((p) => (
+                    {group.products.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).map((p) => (
                       <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                         <td className="p-4 text-center"><input type="checkbox" className="rounded" /></td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <img 
-                              src={getOptimizedImageUrl(p.image, 100)} 
-                              className="w-12 h-12 rounded-lg object-cover bg-gray-100" 
-                              alt={p.name} 
+                            <img
+                              src={getOptimizedImageUrl(p.image, 100)}
+                              className="w-12 h-12 rounded-lg object-cover bg-gray-100"
+                              alt={p.name}
                               loading="lazy"
-                              onError={(e) => { e.target.src = `https://picsum.photos/seed/${p.id}/400/400`; }} 
+                              onError={(e) => { e.target.src = `https://picsum.photos/seed/${p.id}/400/400`; }}
                             />
                             <div>
                               <p className="font-bold text-gray-900">{p.name}</p>
@@ -234,11 +259,11 @@ export default function Products() {
                         </td>
                         <td className="p-4">
                           <div className="flex flex-col gap-1">
-                            <button 
+                            <button
                               onClick={() => toggleStock(p)}
                               className={`px-2.5 py-1 text-xs font-bold rounded-full border w-fit transition-colors ${
-                                (p.inStock && (p.stock === null || p.stock === undefined || p.stock === "" || Number(p.stock) >= 10)) 
-                                  ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' 
+                                (p.inStock && (p.stock === null || p.stock === undefined || p.stock === "" || Number(p.stock) >= 10))
+                                  ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
                                   : 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200'
                               }`}
                             >
@@ -251,6 +276,20 @@ export default function Products() {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => moveProduct(p, 'up')}
+                              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Move up"
+                            >
+                              <ArrowUp size={18} />
+                            </button>
+                            <button
+                              onClick={() => moveProduct(p, 'down')}
+                              className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Move down"
+                            >
+                              <ArrowDown size={18} />
+                            </button>
                             <a href={`/product/${p.id}`} target="_blank" rel="noreferrer" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
                               <Eye size={18} />
                             </a>
