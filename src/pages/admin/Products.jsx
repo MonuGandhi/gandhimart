@@ -113,7 +113,7 @@ export default function Products() {
     toast.success(product.inStock ? 'Marked as Out of Stock' : 'Marked as In Stock');
   };
 
-  const moveProduct = (product, direction) => {
+  const moveProduct = async (product, direction) => {
     const categoryId = String(product.categoryId || 'uncategorized');
     const categoryProducts = products
       .filter(p => String(p.categoryId || 'uncategorized') === categoryId)
@@ -125,12 +125,16 @@ export default function Products() {
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     if (targetIndex < 0 || targetIndex >= categoryProducts.length) return;
 
-    const currentOrder = categoryProducts[currentIndex].displayOrder || 0;
-    const targetOrder = categoryProducts[targetIndex].displayOrder || 0;
+    // Reorder: assign sequential numbers 0, 1, 2, etc after swap
+    const reordered = [...categoryProducts];
+    [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
 
-    updateProduct(categoryProducts[currentIndex].id, { displayOrder: targetOrder });
-    updateProduct(categoryProducts[targetIndex].id, { displayOrder: currentOrder });
-    toast.success(`Moved ${direction === 'up' ? 'up' : 'down'}!`);
+    // Update all products in this category with new sequence
+    reordered.forEach((p, index) => {
+      updateProduct(p.id, { displayOrder: index });
+    });
+
+    toast.success(`Moved ${direction === 'up' ? 'up ⬆️' : 'down ⬇️'}!`);
   };
 
   return (
