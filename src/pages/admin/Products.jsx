@@ -261,14 +261,28 @@ export default function Products() {
                           <input
                             type="number"
                             min="0"
-                            value={p.displayOrder || idx}
+                            value={p.displayOrder ?? idx}
                             onChange={(e) => {
-                              const newOrder = Number(e.target.value);
-                              const maxOrder = group.products.length - 1;
-                              if (newOrder >= 0 && newOrder <= maxOrder) {
-                                updateProduct(p.id, { displayOrder: newOrder });
-                                toast.success(`Position #${newOrder}`, { duration: 1500 });
+                              const newOrderPosition = Number(e.target.value);
+                              const categoryId = String(p.categoryId || 'uncategorized');
+                              const categoryProducts = products
+                                .filter(prod => String(prod.categoryId || 'uncategorized') === categoryId)
+                                .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+
+                              const maxPos = categoryProducts.length - 1;
+                              if (newOrderPosition < 0 || newOrderPosition > maxPos) {
+                                toast.error(`Position must be 0 to ${maxPos}`);
+                                return;
                               }
+
+                              const currentIndex = categoryProducts.findIndex(prod => prod.id === p.id);
+                              const reordered = categoryProducts.filter((_, i) => i !== currentIndex);
+                              reordered.splice(newOrderPosition, 0, p);
+
+                              reordered.forEach((prod, index) => {
+                                updateProduct(prod.id, { displayOrder: index });
+                              });
+                              toast.success(`Position #${newOrderPosition}`, { duration: 1500 });
                             }}
                             className="w-14 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-center font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]"
                           />
