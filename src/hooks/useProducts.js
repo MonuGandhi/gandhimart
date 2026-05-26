@@ -7,7 +7,9 @@ export const useProducts = () => {
   const getProductById = (id) => products.find((p) => String(p.id) === String(id));
 
   const getProductsByCategory = (categoryId) =>
-    products.filter((p) => String(p.categoryId) === String(categoryId));
+    products
+      .filter((p) => String(p.categoryId) === String(categoryId))
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
 
   const getProductsByCategorySlug = (slug) => {
     const category = categories.find((c) => c.slug === slug);
@@ -58,6 +60,7 @@ export const useProducts = () => {
   const getSimilarProducts = (product) =>
     products
       .filter((p) => String(p.categoryId) === String(product.categoryId) && String(p.id) !== String(product.id))
+      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
       .slice(0, 8);
 
   return {
