@@ -232,13 +232,14 @@ export default function Products() {
                     <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-semibold">
                       <th className="p-4 w-12 text-center"><input type="checkbox" className="rounded" /></th>
                       <th className="p-4">Product</th>
+                      <th className="p-4 w-16">Order</th>
                       <th className="p-4">Price/Margin</th>
                       <th className="p-4">Stock</th>
                       <th className="p-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {group.products.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).map((p) => (
+                    {group.products.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)).map((p, idx) => (
                       <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                         <td className="p-4 text-center"><input type="checkbox" className="rounded" /></td>
                         <td className="p-4">
@@ -255,6 +256,22 @@ export default function Products() {
                               <p className="text-xs text-gray-500">{p.weight} {p.unit} • {p.brand}</p>
                             </div>
                           </div>
+                        </td>
+                        <td className="p-4">
+                          <input
+                            type="number"
+                            min="0"
+                            value={p.displayOrder || idx}
+                            onChange={(e) => {
+                              const newOrder = Number(e.target.value);
+                              const maxOrder = group.products.length - 1;
+                              if (newOrder >= 0 && newOrder <= maxOrder) {
+                                updateProduct(p.id, { displayOrder: newOrder });
+                                toast.success(`Position #${newOrder}`, { duration: 1500 });
+                              }
+                            }}
+                            className="w-14 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-center font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#1CA672]"
+                          />
                         </td>
                         <td className="p-4">
                           <p className="font-bold text-gray-900">{formatPrice(p.price)}</p>
@@ -280,20 +297,6 @@ export default function Products() {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => moveProduct(p, 'up')}
-                              className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
-                              title="Move up"
-                            >
-                              <ArrowUp size={18} />
-                            </button>
-                            <button
-                              onClick={() => moveProduct(p, 'down')}
-                              className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Move down"
-                            >
-                              <ArrowDown size={18} />
-                            </button>
                             <a href={`/product/${p.id}`} target="_blank" rel="noreferrer" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
                               <Eye size={18} />
                             </a>
