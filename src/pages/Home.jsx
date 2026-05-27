@@ -32,6 +32,10 @@ export default function Home() {
       }
       map[catId].push(p);
     });
+    // Sort products by displayOrder in each category
+    Object.keys(map).forEach(catId => {
+      map[catId].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    });
     return map;
   }, [products]);
 

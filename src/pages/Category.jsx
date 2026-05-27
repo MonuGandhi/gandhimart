@@ -50,7 +50,8 @@ export default function Category() {
       case 'price_desc': return [...result].sort((a, b) => b.price - a.price);
       case 'rating': return [...result].sort((a, b) => b.rating - a.rating);
       case 'discount': return [...result].sort((a, b) => b.discount - a.discount);
-      default: return result;
+      case 'relevance':
+      default: return [...result].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
     }
   }, [allProducts, sort, currentMaxPrice, minRating, selectedBrands]);
 
