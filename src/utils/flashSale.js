@@ -65,9 +65,9 @@ export function getActiveFlashSaleProducts(products = []) {
   const customConfigs = flashSaleConfig.customConfigs || {};
   const { seed, elapsedRatio } = getFlashSaleTimeData();
   
-  // Filter for in stock products (exclude inStock=false AND stock <= 0)
+  // Filter for active in stock products
   const inStockProducts = products.filter(p => {
-    if (!p.inStock) return false;
+    if (p.inStock !== true) return false;
     const hasStock = p.stock !== undefined && p.stock !== null && p.stock !== '';
     if (hasStock && Number(p.stock) <= 0) return false;
     return true;

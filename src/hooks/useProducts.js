@@ -4,7 +4,7 @@ export const useProducts = () => {
   const products = useAdminStore((state) => state.adminProducts) || [];
   const categories = useAdminStore((state) => state.adminCategories) || [];
 
-  const activeProducts = products.filter(p => p.inStock !== false);
+  const activeProducts = products.filter(p => p.inStock === true);
 
   const getProductById = (id) => products.find((p) => String(p.id) === String(id));
 
