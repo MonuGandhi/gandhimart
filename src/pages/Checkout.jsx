@@ -339,14 +339,11 @@ export default function Checkout() {
 
         const normalizedAddress = { ...addressForm, phone: cleanedPhone };
 
-        // Auto-save address to profile if it's complete
-        try {
-            await saveAddress({ ...normalizedAddress, village: normalizedAddress.village || 'Madhosinghana', id: 'primary' });
-            setAddressForm(prev => ({ ...prev, phone: cleanedPhone }));
-        } catch (err) {
+        // Auto-save address to profile in background (non-blocking)
+        saveAddress({ ...normalizedAddress, village: normalizedAddress.village || 'Madhosinghana', id: 'primary' }).catch((err) => {
             console.error('Auto-save address error:', err);
-            // Non-blocking error, we still want to place the order
-        }
+        });
+        setAddressForm(prev => ({ ...prev, phone: cleanedPhone }));
         // Attach last-known user location (if available) so tracking can use it
         const finalUserLocation = locationService.userLocation || locationService.getCachedLocation() || null;
         const batch = writeBatch(db);
@@ -389,7 +386,10 @@ export default function Checkout() {
                 batch.update(userRef, {
                     walletBalance: increment(-walletDeduction)
                 });
-                await logWalletTransaction(user.email.toLowerCase(), -walletDeduction, 'debit', `Used for order #${orderId}`);
+                // Log transaction in background (non-blocking)
+                logWalletTransaction(user.email.toLowerCase(), -walletDeduction, 'debit', `Used for order #${orderId}`).catch(err => {
+                    console.error('Wallet log error:', err);
+                });
             }
 
             if (appliedReferral && user?.email && !user?.referredBy) {
