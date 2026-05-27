@@ -66,7 +66,7 @@ export const useProducts = () => {
       .slice(0, 8);
 
   return {
-    products,
+    products: activeProducts,
     categories,
     getProductById,
     getProductsByCategory,
