@@ -35,6 +35,13 @@ export default defineConfig({
         start_url: '/',
         categories: ['shopping', 'food', 'lifestyle'],
         prefer_related_applications: false,
+        related_applications: [
+          {
+            platform: 'windows',
+            url: 'https://gandhimart-c9e7.vercel.app/',
+            id: 'GandhiMart.App'
+          }
+        ],
         iarc_rating_id: 'e84b072d-71b3-4d3e-86ae-31a8ce4e53b7',
         icons: [
           {
