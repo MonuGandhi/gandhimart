@@ -3,7 +3,7 @@ import { useAdminStore } from '../../store/adminStore';
 import { useAuthStore } from '../../store/authStore';
 import { useOrdersStore } from '../../store/ordersStore';
 import AdminSidebar from './AdminSidebar';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, Sun, Moon } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
@@ -15,6 +15,16 @@ export default function AdminLayout() {
   const currentAdminUsername = useAdminStore((state) => state.currentAdminUsername);
   const logout = useAdminStore((state) => state.logout);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('adminTheme') === 'dark');
+
+  // Apply dark mode to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Get Auth user for double-checking
   const user = useAuthStore((state) => state.user);
@@ -177,7 +187,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-sm md:text-base">
+    <div className="flex h-screen bg-gray-50 overflow-hidden text-sm md:text-base admin-dashboard">
       
       {/* PERSISTENT ALERT OVERLAY */}
       {activeAlert && (
@@ -252,7 +262,19 @@ export default function AdminLayout() {
               {audioEnabled ? 'ALERTS ACTIVE' : 'ENABLE ALERTS'}
             </button>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={() => {
+                const newMode = !isDarkMode;
+                setIsDarkMode(newMode);
+                localStorage.setItem('adminTheme', newMode ? 'dark' : 'light');
+              }}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              {isDarkMode ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} />}
+            </button>
+
             <div className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${isProAdmin ? 'bg-amber-500 shadow-lg shadow-amber-200' : 'bg-gradient-to-tr from-[#1CA672] to-green-400'}`}>
                 {isProAdmin ? 'S' : 'A'}
