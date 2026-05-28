@@ -41,6 +41,14 @@
         });
       }
     </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .catch(function(err) {
+            console.error('Service Worker registration failed:', err);
+          });
+      }
+    </script>
   </head>
   <body>
     <!-- Capture PWA install prompt ASAP, before React loads -->
