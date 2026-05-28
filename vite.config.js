@@ -26,6 +26,8 @@ export default defineConfig({
         display: 'standalone',
         display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
         orientation: 'portrait',
+        dir: 'ltr',
+        lang: 'en',
         scope: '/',
         start_url: '/',
         categories: ['shopping', 'food', 'lifestyle'],
