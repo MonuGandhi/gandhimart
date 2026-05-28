@@ -9,7 +9,7 @@ try {
   if (fs.existsSync(swPath)) {
     let content = fs.readFileSync(swPath, 'utf8');
     const target = 'importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js")';
-    const replacement = 'try { importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js") } catch(e) { console.warn("OneSignal SW load blocked:", e); }';
+    const replacement = '(() => { try { importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js") } catch(e) { console.warn("OneSignal SW load blocked:", e); } })()';
     
     if (content.includes(target)) {
       content = content.replace(target, replacement);
