@@ -145,7 +145,7 @@ service cloud.firestore {
       allow create: if currentUserEmail() != "";
       allow update: if hasAdminAccess() || 
         (isOwner(userId) && 
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['savedAddresses', 'name', 'phone', 'fcmToken', 'walletBalance', 'referredBy', 'usedCoupons']) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['savedAddresses', 'name', 'phone', 'fcmToken', 'walletBalance', 'referredBy', 'usedCoupons', 'email', 'lastLogin', 'uid', 'referralCode']) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['walletBalance']) || 
           (request.resource.data.walletBalance <= resource.data.get('walletBalance', 0) && request.resource.data.walletBalance >= 0)));
       allow delete: if hasAdminAccess();
