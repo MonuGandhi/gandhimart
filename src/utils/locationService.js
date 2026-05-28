@@ -44,9 +44,9 @@ export const locationService = {
                     reject(error);
                 },
                 {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 300000 // 5 minutes
+                    enableHighAccuracy: false, // Network location is faster & sufficient for area check
+                    timeout: 5000,
+                    maximumAge: 120000 // 2 minutes — use recent cached position if available
                 }
             );
         });

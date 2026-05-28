@@ -268,23 +268,34 @@ export default function Checkout() {
         if (items.length === 0) { toast.error('Your cart is empty'); return; }
         if (!isAddressComplete) { toast.error('Pehle delivery address fill karo'); setEditingAddress(true); return; }
 
-        // Current location must already be allowed from the banner above.
-        // Order button should not open another browser location prompt.
-        // If service-area restriction is enabled, we validate the active location.
+        const cleanedPhone = String(addressForm.phone).replace(/\D/g, '').slice(-10);
+        if (cleanedPhone.length !== 10) {
+            toast.error('Please enter a valid 10-digit mobile number');
+            setEditingAddress(true);
+            return;
+        }
+
+        // Check location permission BEFORE showing loading (instant check)
+        if (locationPermissionState !== 'granted') {
+            if (locationPermissionState === 'denied') {
+                toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
+            } else {
+                setShowLocationModal(true);
+                toast('Pehle location access chalu karein! 😊', { icon: '📍' });
+            }
+            return;
+        }
+
+        // ✅ Show loading spinner IMMEDIATELY so user sees feedback
+        setLoading(true);
+
+        // Location validation — use cached location first for speed
         const isLocationRestrictionEnabled = !!storeSettings?.locationService?.enabled;
         try {
-            if (locationPermissionState !== 'granted') {
-                if (locationPermissionState === 'denied') {
-                    toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
-                } else {
-                    // Soft Prompt: Show modal first instead of just failing with a raw error
-                    setShowLocationModal(true);
-                    toast('Pehle location access chalu karein! 😊', { icon: '📍' });
-                }
-                return;
-            }
-
-            const currentLocation = await locationService.getCurrentLocation();
+            // Try cached location first (< 2 min old) for instant response
+            const cachedLoc = locationService.getCachedLocation();
+            const isCacheFresh = cachedLoc?.timestamp && (Date.now() - cachedLoc.timestamp < 120000);
+            const currentLocation = isCacheFresh ? cachedLoc : await locationService.getCurrentLocation();
 
             if (isLocationRestrictionEnabled) {
                 const settings = storeSettings.locationService || {};
@@ -298,22 +309,24 @@ export default function Checkout() {
                 if (!isWithinArea) {
                     const outOfAreaMessage = locationService.getOutOfAreaMessage();
                     toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
+                    setLoading(false);
                     return;
                 }
             }
 
             if (!currentLocation) {
                 toast.error('Current location nahi mili. Upar wale section se Allow Current Location dabao.');
+                setLoading(false);
                 return;
             }
         } catch (locationError) {
             console.error('Location validation error:', locationError);
-            // Try to get permission status if available for better messaging
             try {
                 if (navigator.permissions && navigator.permissions.query) {
                     const perm = await navigator.permissions.query({ name: 'geolocation' });
                     if (perm.state === 'denied') {
                         toast.error('Location permission is denied in your browser. Enable it in site settings and try again.');
+                        setLoading(false);
                         return;
                     }
                 }
@@ -321,21 +334,12 @@ export default function Checkout() {
                 console.warn('Permission query failed:', permErr);
             }
 
-            // Provide more detailed feedback to user
             const code = locationError?.code || locationError?.name || 'UNKNOWN';
             const msg = locationError?.message || String(locationError);
             toast.error(`Location check failed (${code}): ${msg}. Please enable location and retry.`);
+            setLoading(false);
             return;
         }
-
-        const cleanedPhone = String(addressForm.phone).replace(/\D/g, '').slice(-10);
-        if (cleanedPhone.length !== 10) {
-            toast.error('Please enter a valid 10-digit mobile number');
-            setEditingAddress(true);
-            return;
-        }
-
-        setLoading(true);
 
         const normalizedAddress = { ...addressForm, phone: cleanedPhone };
 
