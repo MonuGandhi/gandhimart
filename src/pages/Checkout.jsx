@@ -276,13 +276,14 @@ export default function Checkout() {
         }
 
         // Check location permission BEFORE showing loading (instant check)
-        if (locationPermissionState !== 'granted') {
-            if (locationPermissionState === 'denied') {
-                toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
-            } else {
-                setShowLocationModal(true);
-                toast('Pehle location access chalu karein! 😊', { icon: '📍' });
-            }
+        // Note: Safari iOS doesn't support permissions API for geolocation, so state is 'unknown'. We must let them proceed.
+        if (locationPermissionState === 'prompt') {
+            setShowLocationModal(true);
+            toast('Pehle location access chalu karein! 😊', { icon: '📍' });
+            return;
+        }
+        if (locationPermissionState === 'denied') {
+            toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
             return;
         }
 
