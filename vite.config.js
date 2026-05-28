@@ -30,7 +30,10 @@ export default defineConfig({
         lang: 'en',
         scope: '/',
         scope_extensions: [
-          { origin: 'https://*.vercel.app' }
+          {
+            type: 'origin',
+            origin: 'https://*.vercel.app'
+          }
         ],
         start_url: '/',
         categories: ['shopping', 'food', 'lifestyle'],
