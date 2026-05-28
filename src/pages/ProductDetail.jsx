@@ -81,6 +81,7 @@ export default function ProductDetail() {
       toast.error(`Only ${stockCount} items left in stock!`);
       return;
     }
+    if (navigator.vibrate) navigator.vibrate(50);
     addItem(product, currentVariant?.id);
     if (qty === 0) {
       toast.success(`${currentWeight} added to cart!`);
@@ -174,13 +175,19 @@ export default function ProductDetail() {
                         </button>
                       ) : (
                         <div className="flex items-center gap-3.5 bg-[#1CA672] text-white font-black px-3.5 py-2 rounded-xl shadow-md shadow-green-100 text-xs">
-                          <button onClick={() => updateQty(itemId, qty - 1)} className="hover:scale-110 active:scale-95 transition-transform">
+                          <button 
+                            onClick={() => {
+                              if (navigator.vibrate) navigator.vibrate(50);
+                              updateQty(itemId, qty - 1);
+                            }} 
+                            className="hover:scale-110 active:scale-90 transition-all"
+                          >
                             <Minus size={14} strokeWidth={3} />
                           </button>
                           <span className="font-black w-4 text-center">{qty}</span>
                           <button 
                             onClick={handleAddToCart} 
-                            className={`hover:scale-110 active:scale-95 transition-transform ${isMaxQtyReached ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            className={`hover:scale-110 active:scale-90 transition-all ${isMaxQtyReached ? 'opacity-40 cursor-not-allowed' : ''}`}
                             disabled={isMaxQtyReached}
                           >
                             <Plus size={14} strokeWidth={3} />

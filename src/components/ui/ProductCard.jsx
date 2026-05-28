@@ -131,6 +131,7 @@ export default function ProductCard({ product, rank, rankBadgeClass }) {
               <button
                 onClick={(e) => {
                   e.preventDefault();
+                  if (navigator.vibrate) navigator.vibrate(50);
                   addItem(product);
                 }}
                 className="border-2 border-[#1CA672] text-[#1CA672] text-[11.5px] md:text-[13.5px] font-black px-3 py-1 md:px-4.5 md:py-1.5 rounded-xl hover:bg-[#1CA672] hover:text-white active:scale-95 transition-all shadow-sm shrink-0"
@@ -142,9 +143,10 @@ export default function ProductCard({ product, rank, rankBadgeClass }) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
+                    if (navigator.vibrate) navigator.vibrate(50);
                     updateQty(product.id, qty - 1);
                   }}
-                  className="text-white p-1 md:p-1.5 hover:bg-black/10 transition-colors"
+                  className="text-white p-1 md:p-1.5 hover:bg-black/10 active:scale-90 transition-all"
                 >
                   <Minus size={12} strokeWidth={3} className="md:w-4 md:h-4" />
                 </button>
@@ -152,13 +154,14 @@ export default function ProductCard({ product, rank, rankBadgeClass }) {
                 <button
                   onClick={(e) => {
                     e.preventDefault();
+                    if (navigator.vibrate) navigator.vibrate(50);
                     if (isMaxQtyReached) {
                       toast.error(`Only ${stockCount} items left in stock!`);
                       return;
                     }
                     addItem(product);
                   }}
-                  className={`text-white p-1 md:p-1.5 hover:bg-black/10 transition-colors ${isMaxQtyReached ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  className={`text-white p-1 md:p-1.5 hover:bg-black/10 active:scale-90 transition-all ${isMaxQtyReached ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
                   <Plus size={12} strokeWidth={3} className="md:w-4 md:h-4" />
                 </button>
