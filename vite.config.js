@@ -29,6 +29,9 @@ export default defineConfig({
         dir: 'ltr',
         lang: 'en',
         scope: '/',
+        scope_extensions: [
+          { origin: '*.vercel.app' }
+        ],
         start_url: '/',
         categories: ['shopping', 'food', 'lifestyle'],
         prefer_related_applications: false,
