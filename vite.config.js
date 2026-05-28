@@ -35,6 +35,32 @@ export default defineConfig({
             origin: 'https://gandhimart-c9e7.vercel.app'
           }
         ],
+        shortcuts: [
+          {
+            name: 'Search Groceries',
+            short_name: 'Search',
+            description: 'Search for fresh groceries and delivery items',
+            url: '/search',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'My Cart',
+            short_name: 'Cart',
+            description: 'View your grocery shopping cart',
+            url: '/cart',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Track Order',
+            short_name: 'Track',
+            description: 'Check active delivery status',
+            url: '/orders',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+          }
+        ],
+        launch_handler: {
+          client_mode: ['focus-existing', 'auto']
+        },
         start_url: '/',
         categories: ['shopping', 'food', 'lifestyle'],
         prefer_related_applications: false,
