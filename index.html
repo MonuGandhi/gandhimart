@@ -22,24 +22,33 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <title>G Mart - Grocery Delivery in 10 Minutes</title>
-    <!-- OneSignal Push Notifications -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <!-- OneSignal Push Notifications (skip for bots/headless browsers) -->
     <script>
-      // Safe Initialization: Skip on localhost to avoid domain mismatch errors
-      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function(OneSignal) {
-          await OneSignal.init({
-            appId: "5d76f007-2e38-4843-ade6-55e034235a92",
-            serviceWorkerPath: "sw.js",
-            serviceWorkerParam: { scope: "/" },
-            allowLocalhostAsSecureOrigin: true,
-            notifyButton: {
-              enable: false
-            },
+      (function() {
+        var isBot = /HeadlessChrome|Puppeteer|Lighthouse|bot|crawl|spider/i.test(navigator.userAgent);
+        var isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
+        if (!isBot && !isLocalhost) {
+          // Dynamically load OneSignal SDK
+          var s = document.createElement('script');
+          s.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+          s.defer = true;
+          document.head.appendChild(s);
+          
+          window.OneSignalDeferred = window.OneSignalDeferred || [];
+          OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+              appId: "5d76f007-2e38-4843-ade6-55e034235a92",
+              serviceWorkerPath: "sw.js",
+              serviceWorkerParam: { scope: "/" },
+              allowLocalhostAsSecureOrigin: true,
+              notifyButton: {
+                enable: false
+              },
+            });
           });
-        });
-      }
+        }
+      })();
     </script>
     <script>
       if ('serviceWorker' in navigator) {
