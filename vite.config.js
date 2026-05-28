@@ -16,6 +16,7 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg', 'robots.txt'],
       manifest: {
+        id: '/',
         name: 'G Mart - Grocery Delivery',
         short_name: 'G Mart',
         description: 'Get groceries delivered in 10 minutes',
