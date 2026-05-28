@@ -118,6 +118,13 @@ export default function AdminLayout() {
     showNextAlert();
   };
 
+  const dismissAllAlerts = () => {
+    stopCurrentAudio();
+    alertQueueRef.current = [];
+    setActiveAlert(null);
+    toast.dismiss('new-order-alert');
+  };
+
   useEffect(() => {
     if (orders.length > 0) {
       const freshOrders = orders
@@ -177,19 +184,36 @@ export default function AdminLayout() {
         <div className="fixed inset-0 z-[9999] bg-red-600/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-pulse">
           <div className="bg-white p-8 rounded-[3rem] shadow-2xl max-w-sm w-full space-y-6">
             <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
-              <Menu size={48} />
+              <Bell size={48} />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-gray-900">NAYA ORDER!</h2>
-              <p className="text-gray-500 font-bold mt-2">Order ID: #{activeAlert.id}</p>
-              <p className="text-2xl font-black text-red-600 mt-2">Amount: ₹{activeAlert.totalAmount || activeAlert.total}</p>
+              <h2 className="text-3xl font-black text-gray-900 leading-none">NAYA ORDER!</h2>
+              {alertQueueRef.current.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-xs font-black bg-red-100 text-red-700 px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                    + {alertQueueRef.current.length} Naye Orders Queue Mein
+                  </span>
+                </div>
+              )}
+              <p className="text-gray-500 font-bold mt-3">Order ID: #{activeAlert.id}</p>
+              <p className="text-2xl font-black text-red-600 mt-1">Amount: ₹{activeAlert.totalAmount || activeAlert.total}</p>
             </div>
-            <button 
-              onClick={stopAlert}
-              className="w-full bg-gray-900 text-white font-black py-4 rounded-2xl text-xl hover:bg-black transition-all active:scale-95 shadow-xl"
-            >
-              STOP ALERT
-            </button>
+            <div className="space-y-3">
+              <button 
+                onClick={stopAlert}
+                className="w-full bg-gray-900 text-white font-black py-4 rounded-2xl text-xl hover:bg-black transition-all active:scale-95 shadow-xl"
+              >
+                STOP ALERT
+              </button>
+              {alertQueueRef.current.length > 0 && (
+                <button 
+                  onClick={dismissAllAlerts}
+                  className="w-full bg-red-100 text-red-600 font-black py-3 rounded-2xl hover:bg-red-200 transition-all active:scale-95 border border-red-200"
+                >
+                  DISMISS ALL ({alertQueueRef.current.length + 1})
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
