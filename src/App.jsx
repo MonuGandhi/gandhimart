@@ -111,14 +111,21 @@ const AppContent = () => {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function(OneSignal) {
         if (user?.uid) {
-          // Link user to OneSignal using Firebase UID
-          try {
-            await OneSignal.login(user.uid);
-            // Also keep tags synced
-            if (user.phone) await OneSignal.User.addTag("phone", user.phone);
-            if (user.name) await OneSignal.User.addTag("name", user.name);
-          } catch (e) {
-            console.error("OneSignal Global Sync Error:", e);
+          // Link user to OneSignal using Firebase UID only if not already synced in this session
+          if (window.__oneSignalSyncedUid !== user.uid) {
+            try {
+              await OneSignal.login(user.uid);
+              // Send tags in one batch
+              const tagsToSet = {};
+              if (user.phone) tagsToSet.phone = user.phone;
+              if (user.name) tagsToSet.name = user.name;
+              if (Object.keys(tagsToSet).length > 0) {
+                await OneSignal.User.addTags(tagsToSet);
+              }
+              window.__oneSignalSyncedUid = user.uid;
+            } catch (e) {
+              console.error("OneSignal Global Sync Error:", e);
+            }
           }
         } else {
           // Clear OneSignal session on logout

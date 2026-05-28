@@ -137,13 +137,12 @@ export default function Profile() {
         if (isLoggedIn && user?.uid && oneSignalTagsSetRef.current !== user.uid) {
           try {
             await OneSignal.login(user.uid);
-            await OneSignal.User.addTag("phone", user.phone);
-            if (user.name) {
-              await OneSignal.User.addTag("name", user.name);
-            }
+            const tagsToSet = { phone: user.phone };
+            if (user.name) tagsToSet.name = user.name;
+            await OneSignal.User.addTags(tagsToSet);
             oneSignalTagsSetRef.current = user.uid; // Mark as set
           } catch (e) {
-            console.error("OneSignal addTag/login error:", e);
+            console.error("OneSignal addTags/login error:", e);
           }
         }
 
@@ -310,10 +309,9 @@ export default function Profile() {
             try {
               if (tempUser.uid && oneSignalTagsSetRef.current !== tempUser.uid) {
                 await OneSignal.login(tempUser.uid);
-                await OneSignal.User.addTag("phone", phone);
-                if (tempUser.name) {
-                  await OneSignal.User.addTag("name", tempUser.name);
-                }
+                const tagsToSet = { phone: phone };
+                if (tempUser.name) tagsToSet.name = tempUser.name;
+                await OneSignal.User.addTags(tagsToSet);
                 oneSignalTagsSetRef.current = tempUser.uid; // Mark as set
               }
               // Explicitly prompt push permission

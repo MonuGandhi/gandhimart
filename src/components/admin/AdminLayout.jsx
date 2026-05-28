@@ -172,8 +172,17 @@ export default function AdminLayout() {
     if (isAdminLoggedIn && typeof window !== 'undefined') {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async (OneSignal) => {
-        await OneSignal.User.addTag("role", "admin");
-        await OneSignal.User.addTag("username", currentAdminUsername || "admin");
+        if (!window.__oneSignalAdminSynced) {
+          try {
+            await OneSignal.User.addTags({
+              role: "admin",
+              username: currentAdminUsername || "admin"
+            });
+            window.__oneSignalAdminSynced = true;
+          } catch (e) {
+            console.error("OneSignal admin tag sync error:", e);
+          }
+        }
       });
     }
   }, [isAdminLoggedIn, currentAdminUsername]);
