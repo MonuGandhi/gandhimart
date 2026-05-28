@@ -32,7 +32,7 @@ export default defineConfig({
         scope_extensions: [
           {
             type: 'origin',
-            origin: 'https://*.vercel.app'
+            origin: 'https://gandhimart-c9e7.vercel.app'
           }
         ],
         start_url: '/',
