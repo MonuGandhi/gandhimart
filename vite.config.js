@@ -43,6 +43,22 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'any maskable'
           }
+        ],
+        screenshots: [
+          {
+            src: '/screenshot-mobile.png',
+            sizes: '771x1600',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'G Mart - Home Screen (Mobile)'
+          },
+          {
+            src: '/screenshot-desktop.png',
+            sizes: '1898x847',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'G Mart - Home Screen (Desktop)'
+          }
         ]
       }
     })
