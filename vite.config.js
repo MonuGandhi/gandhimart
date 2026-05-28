@@ -29,7 +29,6 @@ export default defineConfig({
         start_url: '/',
         categories: ['shopping', 'food', 'lifestyle'],
         prefer_related_applications: false,
-        related_applications: [],
         icons: [
           {
             src: '/pwa-192x192.png',
