@@ -276,7 +276,7 @@ export const useAdminStore = create(
 
         const unsubBanners = onSnapshot(collection(db, 'banners'), (snapshot) => {
           const banners = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-          console.log(`[Store] Banners Sync: ${banners.length} items found`);
+          // Removed console.log(`[Store] Banners Sync: ${banners.length} items found`);
           set({ adminBanners: banners });
         }, (error) => {
           console.error('[FIX-04] Banners Sync Error:', error);
