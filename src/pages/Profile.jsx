@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User, MapPin, Tag, HelpCircle, Info, LogOut, ChevronRight,
@@ -78,6 +78,7 @@ export default function Profile() {
   const [showWalletHistory, setShowWalletHistory] = useState(false);
   const [walletTx, setWalletTx] = useState([]);
   const [loadingWalletTx, setLoadingWalletTx] = useState(false);
+  const oneSignalTagsSetRef = useRef(null);
 
   useEffect(() => {
     const finalizeRedirectSignIn = async () => {
@@ -130,15 +131,17 @@ export default function Profile() {
         // Get initial state
         const currentState = OneSignal.User.PushSubscription.optedIn || false;
         setIsPushEnabled(currentState);
-        
+
         // Tag user with phone and name and login with Firebase UID if logged in
-        if (isLoggedIn && user?.uid) {
+        // Only set tags if they haven't been set for this user yet
+        if (isLoggedIn && user?.uid && oneSignalTagsSetRef.current !== user.uid) {
           try {
             await OneSignal.login(user.uid);
             await OneSignal.User.addTag("phone", user.phone);
             if (user.name) {
               await OneSignal.User.addTag("name", user.name);
             }
+            oneSignalTagsSetRef.current = user.uid; // Mark as set
           } catch (e) {
             console.error("OneSignal addTag/login error:", e);
           }
@@ -305,12 +308,13 @@ export default function Profile() {
           window.OneSignalDeferred = window.OneSignalDeferred || [];
           window.OneSignalDeferred.push(async function(OneSignal) {
             try {
-              if (tempUser.uid) {
+              if (tempUser.uid && oneSignalTagsSetRef.current !== tempUser.uid) {
                 await OneSignal.login(tempUser.uid);
                 await OneSignal.User.addTag("phone", phone);
                 if (tempUser.name) {
                   await OneSignal.User.addTag("name", tempUser.name);
                 }
+                oneSignalTagsSetRef.current = tempUser.uid; // Mark as set
               }
               // Explicitly prompt push permission
               await OneSignal.Slidedown.promptPush();
