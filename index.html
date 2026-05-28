@@ -26,9 +26,9 @@
     <script>
       (function() {
         var isBot = /HeadlessChrome|Puppeteer|Lighthouse|bot|crawl|spider/i.test(navigator.userAgent);
-        var isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        var isAllowedDomain = window.location.hostname === 'gandhimart-c9e7.vercel.app';
         
-        if (!isBot && !isLocalhost) {
+        if (!isBot && isAllowedDomain) {
           // Dynamically load OneSignal SDK
           var s = document.createElement('script');
           s.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
