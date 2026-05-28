@@ -54,7 +54,7 @@ service cloud.firestore {
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['inStock']) ||
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'inStock'])) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['stock']) ||
-          (request.resource.data.stock <= resource.data.get('stock', 0) + 20)));
+          (request.resource.data.stock < resource.data.get('stock', 0) && request.resource.data.stock >= 0)));
     }
 
     match /{path=**}/reviews/{reviewId} {
@@ -85,7 +85,9 @@ service cloud.firestore {
       allow read: if true; 
       allow write: if hasAdminAccess();
       allow update: if hasAdminAccess() || 
-        (currentUserEmail() != "" && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount']));
+        (currentUserEmail() != "" && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount']) &&
+         request.resource.data.usedCount == resource.data.get('usedCount', 0) + 1);
     }
 
     // Notifications: anyone can read (global promos), only admin can write
