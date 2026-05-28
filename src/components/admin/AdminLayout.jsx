@@ -167,25 +167,7 @@ export default function AdminLayout() {
     }
   }, [orders, audioEnabled]);
 
-  // Tag Admin in OneSignal for Push Notifications (Background support)
-  useEffect(() => {
-    if (isAdminLoggedIn && typeof window !== 'undefined') {
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async (OneSignal) => {
-        if (!window.__oneSignalAdminSynced) {
-          try {
-            await OneSignal.User.addTags({
-              role: "admin",
-              username: currentAdminUsername || "admin"
-            });
-            window.__oneSignalAdminSynced = true;
-          } catch (e) {
-            console.error("OneSignal admin tag sync error:", e);
-          }
-        }
-      });
-    }
-  }, [isAdminLoggedIn, currentAdminUsername]);
+  // Note: OneSignal tag syncing (role, username, phone, name) is handled globally in App.jsx
 
   // If PIN login is not active OR Email session is gone/not admin, redirect to profile
   if (!isAdminLoggedIn || !isEmailAdmin) {

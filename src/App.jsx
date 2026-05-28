@@ -119,6 +119,11 @@ const AppContent = () => {
               const tagsToSet = {};
               if (user.phone) tagsToSet.phone = user.phone;
               if (user.name) tagsToSet.name = user.name;
+              if (isAdminLoggedIn || user.role === 'admin' || user.role === 'pro_admin') {
+                tagsToSet.role = 'admin';
+                tagsToSet.username = user.username || user.name || 'admin';
+              }
+              
               if (Object.keys(tagsToSet).length > 0) {
                 await OneSignal.User.addTags(tagsToSet);
               }
