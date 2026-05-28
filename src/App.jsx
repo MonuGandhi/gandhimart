@@ -2,44 +2,46 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
 
-// Pages
-import Home from './pages/Home';
-import Category from './pages/Category';
-import ProductDetail from './pages/ProductDetail';
-import Search from './pages/Search';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import OrderSuccess from './pages/OrderSuccess';
-import OrderTracking from './pages/OrderTracking';
-import Orders from './pages/Orders';
-import Profile from './pages/Profile';
-import Wishlist from './pages/Wishlist';
-import Notifications from './pages/Notifications';
-import Install from './pages/Install';
-import Policies from './pages/Policies';
-import DeliveryDashboard from './pages/DeliveryDashboard';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminLogin from './pages/admin/AdminLogin';
-import Dashboard from './pages/admin/Dashboard';
-import Products from './pages/admin/Products';
-import Categories from './pages/admin/Categories';
-import OrdersAdmin from './pages/admin/Orders';
-import Coupons from './pages/admin/Coupons';
-import SpecialOffers from './pages/admin/SpecialOffers';
-import Customers from './pages/admin/Customers';
-import BannersAdmin from './pages/admin/Banners';
-import AdminNotifications from './pages/admin/Notifications';
-import Appearance from './pages/admin/Appearance';
-import Reviews from './pages/admin/Reviews';
-import Settings from './pages/admin/Settings';
-import StoreStatus from './pages/admin/StoreStatus';
-import LayoutManager from './pages/admin/LayoutManager';
-import Udhaars from './pages/admin/Udhaars';
+import { lazy, Suspense } from 'react';
+
+// Lazy loaded Pages
+const Home = lazy(() => import('./pages/Home'));
+const Category = lazy(() => import('./pages/Category'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Search = lazy(() => import('./pages/Search'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
+const OrderTracking = lazy(() => import('./pages/OrderTracking'));
+const Orders = lazy(() => import('./pages/Orders'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Install = lazy(() => import('./pages/Install'));
+const Policies = lazy(() => import('./pages/Policies'));
+const DeliveryDashboard = lazy(() => import('./pages/DeliveryDashboard'));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const Products = lazy(() => import('./pages/admin/Products'));
+const Categories = lazy(() => import('./pages/admin/Categories'));
+const OrdersAdmin = lazy(() => import('./pages/admin/Orders'));
+const Coupons = lazy(() => import('./pages/admin/Coupons'));
+const SpecialOffers = lazy(() => import('./pages/admin/SpecialOffers'));
+const Customers = lazy(() => import('./pages/admin/Customers'));
+const BannersAdmin = lazy(() => import('./pages/admin/Banners'));
+const AdminNotifications = lazy(() => import('./pages/admin/Notifications'));
+const Appearance = lazy(() => import('./pages/admin/Appearance'));
+const Reviews = lazy(() => import('./pages/admin/Reviews'));
+const Settings = lazy(() => import('./pages/admin/Settings'));
+const StoreStatus = lazy(() => import('./pages/admin/StoreStatus'));
+const LayoutManager = lazy(() => import('./pages/admin/LayoutManager'));
+const Udhaars = lazy(() => import('./pages/admin/Udhaars'));
 import { Navigate } from 'react-router-dom';
 
-import TrackOrder from './pages/TrackOrder';
-import DeliveryTracker from './pages/DeliveryTracker';
-import ActiveDeliveries from './pages/admin/ActiveDeliveries';
+const TrackOrder = lazy(() => import('./pages/TrackOrder'));
+const DeliveryTracker = lazy(() => import('./pages/DeliveryTracker'));
+const ActiveDeliveries = lazy(() => import('./pages/admin/ActiveDeliveries'));
 import { useAuthStore } from './store/authStore';
 
 // Scroll to top component
@@ -186,46 +188,48 @@ const AppContent = () => {
       {(!isStoreOpen && !isAdminRoute && !isUserAdmin) ? (
         <StoreClosed />
       ) : (
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/category/:slug" element={<Category />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-            <Route path="/track-order" element={<TrackOrder />} />
-            <Route path="/delivery-tracker" element={<DeliveryTracker />} />
-            <Route path="/admin/active-deliveries" element={<ActiveDeliveries />} />
-          <Route path="/order-success" element={<OrderSuccess />} />
-          <Route path="/order/:id" element={<OrderTracking />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/install" element={<Install />} />
-          <Route path="/delivery-dashboard" element={<DeliveryDashboard />} />
-          <Route path="/privacy" element={<Policies />} />
-          <Route path="/terms" element={<Policies />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="products" element={<Products />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="orders" element={<OrdersAdmin />} />
-            <Route path="udhaars" element={<Udhaars />} />
-            <Route path="coupons" element={<Coupons />} />
-            <Route path="special-offers" element={<SpecialOffers />} />
-            <Route path="customers" element={<Customers />} />
-            <Route path="banners" element={<BannersAdmin />} />
-            <Route path="notifications" element={<AdminNotifications />} />
-            <Route path="appearance" element={<Appearance />} />
-            <Route path="store-status" element={<StoreStatus />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="reviews" element={<Reviews />} />
-            <Route path="layout" element={<LayoutManager />} />
-        </Route>
-        </Routes>
+        <Suspense fallback={<SplashLoading />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/category/:slug" element={<Category />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+              <Route path="/track-order" element={<TrackOrder />} />
+              <Route path="/delivery-tracker" element={<DeliveryTracker />} />
+              <Route path="/admin/active-deliveries" element={<ActiveDeliveries />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/order/:id" element={<OrderTracking />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/install" element={<Install />} />
+            <Route path="/delivery-dashboard" element={<DeliveryDashboard />} />
+            <Route path="/privacy" element={<Policies />} />
+            <Route path="/terms" element={<Policies />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="products" element={<Products />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="orders" element={<OrdersAdmin />} />
+              <Route path="udhaars" element={<Udhaars />} />
+              <Route path="coupons" element={<Coupons />} />
+              <Route path="special-offers" element={<SpecialOffers />} />
+              <Route path="customers" element={<Customers />} />
+              <Route path="banners" element={<BannersAdmin />} />
+              <Route path="notifications" element={<AdminNotifications />} />
+              <Route path="appearance" element={<Appearance />} />
+              <Route path="store-status" element={<StoreStatus />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="reviews" element={<Reviews />} />
+              <Route path="layout" element={<LayoutManager />} />
+            </Route>
+          </Routes>
+        </Suspense>
       )}
     </div>
   );
