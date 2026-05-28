@@ -302,22 +302,15 @@ export default function Profile() {
           localStorage.removeItem('gmart_referral_code');
         }
         
-        // OneSignal login (external_id linking) and permission prompting
+        // OneSignal permission prompting (login and tags are handled globally by App.jsx)
         if (typeof window !== 'undefined') {
           window.OneSignalDeferred = window.OneSignalDeferred || [];
           window.OneSignalDeferred.push(async function(OneSignal) {
             try {
-              if (tempUser.uid && oneSignalTagsSetRef.current !== tempUser.uid) {
-                await OneSignal.login(tempUser.uid);
-                const tagsToSet = { phone: phone };
-                if (tempUser.name) tagsToSet.name = tempUser.name;
-                await OneSignal.User.addTags(tagsToSet);
-                oneSignalTagsSetRef.current = tempUser.uid; // Mark as set
-              }
               // Explicitly prompt push permission
               await OneSignal.Slidedown.promptPush();
             } catch (e) {
-              console.error("OneSignal login error during auth flow:", e);
+              console.error("OneSignal prompt error during auth flow:", e);
             }
           });
         }
