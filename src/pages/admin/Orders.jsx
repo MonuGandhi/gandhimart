@@ -60,6 +60,26 @@ export default function Orders() {
   const getCustomerPhone = (order) => order.deliveryAddress?.phone || order.address?.phone || order.phone || '';
   const getOrderTotal = (order) => Number(order.totalAmount || order.total || 0);
 
+  const checkOrderSecurity = (order) => {
+    if (!order.items) return true;
+    const expectedSubtotal = order.items.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty || item.quantity || 1)), 0);
+    const declaredSubtotal = Number(order.subtotal || 0);
+    
+    // If the frontend didn't send 'subtotal', we fallback to checking total
+    if (!order.subtotal && order.total) {
+       if (expectedSubtotal > order.total + 50) return false; // Rough check for old orders
+       return true;
+    }
+
+    if (Math.abs(expectedSubtotal - declaredSubtotal) > 2) return false;
+
+    const expectedTotal = declaredSubtotal - Number(order.couponDiscount || 0) + Number(order.deliveryFee || 0) + Number(order.gst || 0) - Number(order.walletUsed || 0);
+    const declaredTotal = Number(order.totalAmount || order.total || 0);
+
+    if (Math.abs(expectedTotal - declaredTotal) > 2) return false;
+    return true;
+  };
+
   const handleStatusChange = async (orderId, newStatus) => {
     const order = orders.find(o => o.id === orderId);
 
@@ -504,6 +524,11 @@ export default function Orders() {
                   <td className="p-4">
                     <p className="font-bold text-gray-900">{formatPrice(o.totalAmount || o.total)}</p>
                     <p className="text-xs text-gray-500 capitalize">{o.paymentMethod || 'COD'}</p>
+                    {!checkOrderSecurity(o) && (
+                      <div className="mt-1 flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-md w-max">
+                        <span className="text-[10px] font-black uppercase tracking-wider">🚨 FAKE AMOUNT</span>
+                      </div>
+                    )}
                   </td>
                   <td className="p-4">
                     <select 
@@ -557,6 +582,20 @@ export default function Orders() {
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {!checkOrderSecurity(selectedOrder) && (
+                <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 shadow-sm animate-pulse">
+                  <h3 className="text-red-700 font-black flex items-center gap-2 mb-1">
+                    🚨 SECURITY WARNING: MANIPULATED AMOUNT
+                  </h3>
+                  <p className="text-red-600 text-xs font-bold leading-relaxed">
+                    This order's total amount does not match the actual sum of the items. The customer may have used 'Inspect Element' to bypass the payment amount. 
+                    <br/><br/>
+                    <strong>Actual Items Total:</strong> {formatPrice(selectedOrder.items?.reduce((s, i) => s + (Number(i.price) * Number(i.qty || i.quantity || 1)), 0))} <br/>
+                    <strong>Declared Bill:</strong> {formatPrice(selectedOrder.totalAmount || selectedOrder.total)}
+                  </p>
+                </div>
+              )}
+
               <div>
                 <h3 className="font-bold text-gray-900 mb-2">Customer Details</h3>
                 <div className="bg-gray-50 p-3 rounded-xl text-sm space-y-2 relative">
