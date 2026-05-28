@@ -70,6 +70,18 @@ export default function AdminLayout() {
     audioInstanceRef.current = audio;
   };
 
+  const showBrowserNotification = (orderId) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🚨 NEW ORDER!', {
+        body: `Order #${orderId} received!`,
+        icon: 'https://gandhimart-c9e7.vercel.app/logo.png',
+        badge: 'https://gandhimart-c9e7.vercel.app/logo.png',
+        tag: 'new-order',
+        requireInteraction: true
+      });
+    }
+  };
+
   const showNextAlert = () => {
     const nextAlert = alertQueueRef.current.shift() || null;
 
@@ -80,6 +92,9 @@ export default function AdminLayout() {
     }
 
     setActiveAlert(nextAlert);
+
+    // Send browser notification (works in background!)
+    showBrowserNotification(nextAlert.id);
 
     if (audioEnabled) {
       playAlertAudio();
@@ -112,6 +127,11 @@ export default function AdminLayout() {
     audio.play().then(() => {
       setAudioEnabled(true);
       toast.success('Alerts Enabled! 🔔', { id: 'audio-enabled' });
+
+      // Request notification permission for background alerts
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
 
       if (activeAlertRef.current && !audioInstanceRef.current) {
         playAlertAudio();
