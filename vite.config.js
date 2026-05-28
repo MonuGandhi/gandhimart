@@ -9,6 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'inline',
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
