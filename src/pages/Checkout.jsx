@@ -11,7 +11,7 @@ import LocationPermissionModal from '../components/LocationPermissionModal';
 
 import toast from 'react-hot-toast';
 import {
-    MapPin, Tag, Wallet, Smartphone, Truck,
+    MapPin, Tag, Wallet, Truck,
     CheckCircle2, Zap, X, ArrowLeft, Edit2, Gift, ChevronRight, ShoppingBag
 } from 'lucide-react';
 import { writeBatch, doc, increment, getDoc, collection, arrayUnion } from 'firebase/firestore';
@@ -53,7 +53,6 @@ export default function Checkout() {
     const adminCoupons = useAdminStore((s) => s.adminCoupons);
 
     const [couponCode, setCouponCode] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('cod');
     const [loading, setLoading] = useState(false);
     const [useWallet, setUseWallet] = useState(false);
     const [referralInput, setReferralInput] = useState('');
@@ -366,7 +365,7 @@ export default function Checkout() {
                 customerAccountType: 'registered',
                 isGuestOrder: false,
                 address: normalizedAddress, // Consistency: use 'address' key
-                paymentMethod,
+                paymentMethod: 'cod',
                 subtotal: computed.subtotal,
                 productDiscount: computed.productDiscount,
                 couponDiscount: computed.couponDiscount,
@@ -749,75 +748,22 @@ export default function Checkout() {
                 {/* Payment Method */}
                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
                     <div className="px-5 pt-5 pb-3 flex items-center gap-2">
-                        <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center">
-                            <Smartphone size={16} className="text-indigo-500" />
+                        <div className="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center">
+                            <Truck size={16} className="text-green-500" />
                         </div>
                         <span className="text-sm font-black text-gray-800 uppercase tracking-wider">Payment Method</span>
                     </div>
-                    <div className="px-5 pb-5 space-y-2">
-                        {[
-                            { id: 'cod', label: 'Cash on Delivery', icon: <Truck size={18} className="text-green-500" />, desc: 'Pay when you receive' },
-                            ...(storeSettings?.upiId ? [{ id: 'scanner', label: 'Pay by Scanner', icon: <Smartphone size={18} className="text-indigo-500" />, desc: `UPI: ${storeSettings.upiId}` }] : []),
-                        ].map((method) => (
-                            <button
-                                key={method.id}
-                                onClick={() => setPaymentMethod(method.id)}
-                                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border-2 transition-all ${paymentMethod === method.id
-                                    ? 'border-[#1CA672] bg-green-50'
-                                    : 'border-gray-100 bg-gray-50 hover:border-gray-200'
-                                    }`}
-                            >
-                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                    {method.icon}
-                                </div>
-                                <div className="flex-1 text-left">
-                                    <p className="text-sm font-black text-gray-800">{method.label}</p>
-                                    <p className="text-[10px] text-gray-400">{method.desc}</p>
-                                </div>
-                                {paymentMethod === method.id && (
-                                    <CheckCircle2 size={20} className="text-[#1CA672] shrink-0" />
-                                )}
-                            </button>
-                        ))}
-                        {/* UPI QR shown when scanner selected */}
-                        {paymentMethod === 'scanner' && storeSettings?.upiId && (
-                            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 text-center">
-                                <p className="text-xs font-black text-indigo-700 mb-3 uppercase tracking-wider">Payment Details</p>
-
-                                <div className="bg-white border border-indigo-100 rounded-2xl p-4 mb-4 shadow-sm">
-                                    <p className="text-[10px] text-gray-400 font-black uppercase mb-1">UPI ID</p>
-                                    <p className="text-lg font-black text-gray-900 tracking-wide break-all">{storeSettings.upiId}</p>
-                                    <button
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(storeSettings.upiId);
-                                            toast.success('UPI ID Copied! Paste in your app.');
-                                        }}
-                                        className="mt-2 text-[10px] bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg font-black uppercase hover:bg-indigo-100 transition-colors"
-                                    >
-                                        Copy UPI ID
-                                    </button>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <a
-                                        href={`upi://pay?pa=${storeSettings.upiId}&cu=INR&am=${finalTotal}`}
-                                        className="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white font-black py-3.5 rounded-xl text-sm active:scale-95 transition-transform shadow-lg shadow-indigo-200"
-                                    >
-                                        <Smartphone size={18} /> Open UPI App
-                                    </a>
-
-                                    <div className="flex items-center gap-2 justify-center text-gray-400">
-                                        <div className="h-px bg-gray-200 flex-1"></div>
-                                        <span className="text-[10px] font-bold uppercase">Or</span>
-                                        <div className="h-px bg-gray-200 flex-1"></div>
-                                    </div>
-
-                                    <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
-                                        Agar "Security Reasons" error aaye, toh <span className="font-bold text-indigo-600">UPI ID Copy</span> karke GPay/PhonePe mein manually pay karein.
-                                    </p>
-                                </div>
+                    <div className="px-5 pb-5">
+                        <div className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border-2 border-[#1CA672] bg-green-50">
+                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                <Truck size={18} className="text-green-500" />
                             </div>
-                        )}
+                            <div className="flex-1 text-left">
+                                <p className="text-sm font-black text-gray-800">Cash on Delivery</p>
+                                <p className="text-[10px] text-gray-400">Pay when you receive</p>
+                            </div>
+                            <CheckCircle2 size={20} className="text-[#1CA672] shrink-0" />
+                        </div>
                     </div>
                 </div>
 

@@ -698,14 +698,25 @@ export default function Orders() {
                   {selectedOrder.discountAmount > 0 && <div className="flex justify-between text-[#1CA672]"><span className="font-semibold">Discount</span><span className="font-semibold">-{formatPrice(selectedOrder.discountAmount)}</span></div>}
                   <div className="pt-2 border-t border-gray-200 flex justify-between font-black text-lg"><span className="text-gray-900">Total</span><span className="text-[#1CA672]">{formatPrice(selectedOrder.totalAmount || selectedOrder.total)}</span></div>
                   <div className="pt-2 text-xs text-gray-500 text-center uppercase tracking-wide border-b border-gray-100 pb-2 mb-2">Method: {selectedOrder.paymentMethod?.toUpperCase() || 'COD'}</div>
-                  {selectedOrder.paymentDetails && (
+                  {selectedOrder.paymentDetails || (selectedOrder.paymentMethod === 'scanner' && (selectedOrder.utrNumber || selectedOrder.paymentScreenshot)) ? (
                     <div className="mt-2 p-2 bg-white border border-gray-100 rounded-lg text-xs">
                       <p className="font-bold text-gray-700 mb-1">Details:</p>
-                      {selectedOrder.paymentMethod === 'upi' && (
+                      {selectedOrder.paymentMethod === 'upi' && selectedOrder.paymentDetails && (
                         <p><span className="text-gray-500">Txn ID / UTR:</span> <span className="font-bold text-blue-600">{selectedOrder.paymentDetails.transactionId}</span></p>
                       )}
+                      {selectedOrder.paymentMethod === 'scanner' && selectedOrder.utrNumber && (
+                        <p><span className="text-gray-500">Txn ID / UTR:</span> <span className="font-bold text-blue-600">{selectedOrder.utrNumber}</span></p>
+                      )}
+                      {selectedOrder.paymentMethod === 'scanner' && selectedOrder.paymentScreenshot && (
+                        <div className="mt-2">
+                          <span className="text-gray-500 block mb-1">Payment Screenshot:</span>
+                          <a href={selectedOrder.paymentScreenshot} target="_blank" rel="noopener noreferrer">
+                            <img src={selectedOrder.paymentScreenshot} alt="Payment Proof" className="w-full max-h-32 object-contain rounded-lg border border-gray-200" />
+                          </a>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 <button
                   onClick={() => handleAddToUdhaar(selectedOrder)}
