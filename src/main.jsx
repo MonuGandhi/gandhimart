@@ -14,6 +14,17 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, errorInfo) {
+    if (
+      error && 
+      error.message && 
+      (error.message.includes('Failed to fetch dynamically imported module') || 
+       error.message.includes('Importing a module script failed'))
+    ) {
+      // It's likely a new deployment happened, invalidating the old chunk
+      window.location.reload();
+      return;
+    }
+    
     this.setState({ errorInfo });
     console.error("React Crash:", error, errorInfo);
   }
@@ -35,6 +46,11 @@ class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+
+// Catch Vite chunk loading errors globally
+window.addEventListener('vite:preloadError', (event) => {
+  window.location.reload();
+});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
