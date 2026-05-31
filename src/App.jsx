@@ -4,44 +4,76 @@ import { useEffect } from 'react';
 
 import { lazy, Suspense } from 'react';
 
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
+    );
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
+        // Clear caches to force service worker to update
+        if ('caches' in window) {
+          try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+          } catch (e) {
+            console.error('Error clearing caches', e);
+          }
+        }
+        // Force reload by appending a timestamp query string to break out of SW cache
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('v', new Date().getTime().toString());
+        window.location.href = currentUrl.toString();
+        // Return a promise that never resolves to prevent further rendering
+        return new Promise(() => {});
+      }
+      throw error;
+    }
+  });
+
 // Lazy loaded Pages
-const Home = lazy(() => import('./pages/Home'));
-const Category = lazy(() => import('./pages/Category'));
-const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const Search = lazy(() => import('./pages/Search'));
-const Cart = lazy(() => import('./pages/Cart'));
-const Checkout = lazy(() => import('./pages/Checkout'));
-const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
-const OrderTracking = lazy(() => import('./pages/OrderTracking'));
-const Orders = lazy(() => import('./pages/Orders'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Wishlist = lazy(() => import('./pages/Wishlist'));
-const Notifications = lazy(() => import('./pages/Notifications'));
-const Install = lazy(() => import('./pages/Install'));
-const Policies = lazy(() => import('./pages/Policies'));
-const DeliveryDashboard = lazy(() => import('./pages/DeliveryDashboard'));
-const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
-const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
-const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
-const Products = lazy(() => import('./pages/admin/Products'));
-const Categories = lazy(() => import('./pages/admin/Categories'));
-const OrdersAdmin = lazy(() => import('./pages/admin/Orders'));
-const Coupons = lazy(() => import('./pages/admin/Coupons'));
-const SpecialOffers = lazy(() => import('./pages/admin/SpecialOffers'));
-const Customers = lazy(() => import('./pages/admin/Customers'));
-const BannersAdmin = lazy(() => import('./pages/admin/Banners'));
-const AdminNotifications = lazy(() => import('./pages/admin/Notifications'));
-const Appearance = lazy(() => import('./pages/admin/Appearance'));
-const Reviews = lazy(() => import('./pages/admin/Reviews'));
-const Settings = lazy(() => import('./pages/admin/Settings'));
-const StoreStatus = lazy(() => import('./pages/admin/StoreStatus'));
-const LayoutManager = lazy(() => import('./pages/admin/LayoutManager'));
-const Udhaars = lazy(() => import('./pages/admin/Udhaars'));
+const Home = lazyWithRetry(() => import('./pages/Home'));
+const Category = lazyWithRetry(() => import('./pages/Category'));
+const ProductDetail = lazyWithRetry(() => import('./pages/ProductDetail'));
+const Search = lazyWithRetry(() => import('./pages/Search'));
+const Cart = lazyWithRetry(() => import('./pages/Cart'));
+const Checkout = lazyWithRetry(() => import('./pages/Checkout'));
+const OrderSuccess = lazyWithRetry(() => import('./pages/OrderSuccess'));
+const OrderTracking = lazyWithRetry(() => import('./pages/OrderTracking'));
+const Orders = lazyWithRetry(() => import('./pages/Orders'));
+const Profile = lazyWithRetry(() => import('./pages/Profile'));
+const Wishlist = lazyWithRetry(() => import('./pages/Wishlist'));
+const Notifications = lazyWithRetry(() => import('./pages/Notifications'));
+const Install = lazyWithRetry(() => import('./pages/Install'));
+const Policies = lazyWithRetry(() => import('./pages/Policies'));
+const DeliveryDashboard = lazyWithRetry(() => import('./pages/DeliveryDashboard'));
+const AdminLayout = lazyWithRetry(() => import('./components/admin/AdminLayout'));
+const AdminLogin = lazyWithRetry(() => import('./pages/admin/AdminLogin'));
+const Dashboard = lazyWithRetry(() => import('./pages/admin/Dashboard'));
+const Products = lazyWithRetry(() => import('./pages/admin/Products'));
+const Categories = lazyWithRetry(() => import('./pages/admin/Categories'));
+const OrdersAdmin = lazyWithRetry(() => import('./pages/admin/Orders'));
+const Coupons = lazyWithRetry(() => import('./pages/admin/Coupons'));
+const SpecialOffers = lazyWithRetry(() => import('./pages/admin/SpecialOffers'));
+const Customers = lazyWithRetry(() => import('./pages/admin/Customers'));
+const BannersAdmin = lazyWithRetry(() => import('./pages/admin/Banners'));
+const AdminNotifications = lazyWithRetry(() => import('./pages/admin/Notifications'));
+const Appearance = lazyWithRetry(() => import('./pages/admin/Appearance'));
+const Reviews = lazyWithRetry(() => import('./pages/admin/Reviews'));
+const Settings = lazyWithRetry(() => import('./pages/admin/Settings'));
+const StoreStatus = lazyWithRetry(() => import('./pages/admin/StoreStatus'));
+const LayoutManager = lazyWithRetry(() => import('./pages/admin/LayoutManager'));
+const Udhaars = lazyWithRetry(() => import('./pages/admin/Udhaars'));
 import { Navigate } from 'react-router-dom';
 
-const TrackOrder = lazy(() => import('./pages/TrackOrder'));
-const DeliveryTracker = lazy(() => import('./pages/DeliveryTracker'));
-const ActiveDeliveries = lazy(() => import('./pages/admin/ActiveDeliveries'));
+const TrackOrder = lazyWithRetry(() => import('./pages/TrackOrder'));
+const DeliveryTracker = lazyWithRetry(() => import('./pages/DeliveryTracker'));
+const ActiveDeliveries = lazyWithRetry(() => import('./pages/admin/ActiveDeliveries'));
 import { useAuthStore } from './store/authStore';
 
 // Scroll to top component
