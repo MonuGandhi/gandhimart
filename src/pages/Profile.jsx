@@ -245,13 +245,7 @@ export default function Profile() {
     } catch (error) {
       console.error("Sign-in error details:", error);
       if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-        try {
-          await signInWithRedirect(auth, provider);
-          return;
-        } catch (redirectError) {
-          console.error('Redirect fallback error:', redirectError);
-          toast.error(`Sign-In Error: ${redirectError.message}`);
-        }
+        toast.error('Popup blocked! Please look at your address bar and allow popups to sign in.', { duration: 5000 });
       } else if (error.code === 'auth/unauthorized-domain') {
         toast.error('Domain not authorized in Firebase Console! Please check Step 1.');
       } else {
