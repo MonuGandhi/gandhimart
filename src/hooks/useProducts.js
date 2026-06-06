@@ -2,7 +2,8 @@ import { useAdminStore } from '../store/adminStore';
 
 export const useProducts = () => {
   const products = useAdminStore((state) => state.adminProducts) || [];
-  const categories = useAdminStore((state) => state.adminCategories) || [];
+  const allCategories = useAdminStore((state) => state.adminCategories) || [];
+  const categories = allCategories.filter(c => c.isActive !== false);
 
   const activeProducts = products.filter(p => p.inStock === true);
 

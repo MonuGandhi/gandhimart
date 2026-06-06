@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff } from 'lucide-react';
 import { useAdminStore } from '../../store/adminStore';
 import toast from 'react-hot-toast';
 import { uploadImage } from '../../utils/uploadImage';
@@ -17,7 +17,7 @@ export default function Categories() {
   const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: '', emoji: '🛒', color: 'bg-green-100', slug: '', image: ''
+    name: '', emoji: '🛒', color: 'bg-green-100', slug: '', image: '', isActive: true
   });
 
   const emojis = ['🛒', '🍎', '🥦', '🍞', '🥛', '🥩', '🍫', '🧼', '💊', '🪴', '🐟', '🍦'];
@@ -89,6 +89,11 @@ export default function Categories() {
     }
   };
 
+  const toggleStatus = (id, currentStatus) => {
+    updateCategory(id, { isActive: currentStatus === false ? true : false });
+    toast.success(currentStatus === false ? 'Category Activated' : 'Category Deactivated');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -99,7 +104,7 @@ export default function Categories() {
         <button 
           onClick={() => {
             setEditingCategory(null);
-            setFormData({ name: '', emoji: '🛒', color: 'bg-green-100', slug: '' });
+            setFormData({ name: '', emoji: '🛒', color: 'bg-green-100', slug: '', isActive: true });
             setShowAddModal(true);
           }}
           className="flex items-center justify-center gap-2 px-4 py-2 bg-[#1CA672] text-white rounded-lg font-semibold hover:bg-[#158F5F] transition-colors"
@@ -126,6 +131,9 @@ export default function Categories() {
               <p className="text-xs text-gray-500 truncate">/{cat.slug}</p>
             </div>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => toggleStatus(cat.id, cat.isActive)} className={`p-1.5 rounded-lg ${cat.isActive !== false ? 'text-green-500 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'}`} title="Toggle Visibility">
+                {cat.isActive !== false ? <Eye size={16} /> : <EyeOff size={16} />}
+              </button>
               <button onClick={() => reorderCategory(cat.id, 'up')} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg" title="Move Left/Up">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
               </button>
