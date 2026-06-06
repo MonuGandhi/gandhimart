@@ -66,10 +66,13 @@ export function getActiveFlashSaleProducts(products = []) {
   const { seed, elapsedRatio } = getFlashSaleTimeData();
   
   // Filter for active in stock products
+  const allCategories = useAdminStore.getState().adminCategories || [];
   const inStockProducts = products.filter(p => {
     if (p.inStock !== true) return false;
     const hasStock = p.stock !== undefined && p.stock !== null && p.stock !== '';
     if (hasStock && Number(p.stock) <= 0) return false;
+    const cat = allCategories.find(c => String(c.id) === String(p.categoryId));
+    if (cat && cat.isActive === false) return false;
     return true;
   });
   if (inStockProducts.length === 0) return [];
