@@ -5,7 +5,12 @@ export const useProducts = () => {
   const allCategories = useAdminStore((state) => state.adminCategories) || [];
   const categories = allCategories.filter(c => c.isActive !== false);
 
-  const activeProducts = products.filter(p => p.inStock === true);
+  const activeProducts = products.filter(p => {
+    if (p.inStock !== true) return false;
+    const cat = allCategories.find(c => String(c.id) === String(p.categoryId));
+    if (cat && cat.isActive === false) return false;
+    return true;
+  });
 
   const getProductById = (id) => products.find((p) => String(p.id) === String(id));
 
