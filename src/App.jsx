@@ -183,6 +183,11 @@ const AppContent = () => {
   // Check if current user has admin privileges
   const isUserAdmin = isAdminLoggedIn || user?.role === 'admin' || user?.role === 'pro_admin';
 
+  const blacklist = useAdminStore((state) => state.blacklist) || { emails: [], phones: [] };
+  const isBlocked = user?.isBlocked || 
+                    (user?.email && blacklist.emails?.includes(user.email.toLowerCase())) || 
+                    (user?.phone && blacklist.phones?.includes(user.phone));
+
   // Check if splash was already shown in this session
   const hasSeenSplash = sessionStorage.getItem('gmart_splash_seen');
 
@@ -231,6 +236,18 @@ const AppContent = () => {
 
       {(!isStoreOpen && !isAdminRoute && !isUserAdmin) ? (
         <StoreClosed />
+      ) : isBlocked && !isAdminRoute ? (
+        <div className="min-h-screen bg-red-50 flex flex-col items-center justify-center p-6 text-center z-50">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6 shadow-sm border border-red-200">
+            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black text-red-800 mb-4 uppercase tracking-widest">Access Denied</h1>
+          <p className="text-red-700 max-w-md font-bold text-[15px] leading-relaxed border border-red-200 py-6 bg-white px-5 rounded-2xl shadow-sm">
+            Aapke account par suspicious (sandigdh) activity detect hui hai. Hamari policies ka ulanghan karne ki wajah se aapka access permanently block kar diya gaya hai. Ab aap hamari services ka istemal nahi kar sakte.
+          </p>
+        </div>
       ) : (
         <Suspense fallback={<SplashLoading />}>
           <Routes>

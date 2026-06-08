@@ -205,6 +205,7 @@ export const useAdminStore = create(
       adminBanners: [],
       adminOffers: [],
       referralSettings: {},
+      blacklist: { emails: [], phones: [] },
       isFirebaseInitialized: false,
       isSettingsLoaded: false,
 
@@ -262,6 +263,14 @@ export const useAdminStore = create(
           if (docSnap.exists()) set({ homepageSections: docSnap.data() });
         }, (error) => console.error('Homepage Settings Sync Error:', error));
 
+        const unsubBlacklist = onSnapshot(doc(db, 'settings', 'blacklist'), (docSnap) => {
+          if (docSnap.exists()) {
+            set({ blacklist: docSnap.data() });
+          } else {
+            set({ blacklist: { emails: [], phones: [] } });
+          }
+        }, (error) => console.error('Blacklist Sync Error:', error));
+
         const unsubHomepageOrder = onSnapshot(doc(db, 'settings', 'homepageOrder'), (docSnap) => {
           if (docSnap.exists()) {
             const orderData = docSnap.data();
@@ -283,7 +292,7 @@ export const useAdminStore = create(
           toast.error('[FIX-04] Permission Error');
         });
 
-        unsubs.push(unsubCats, unsubProds, unsubCoups, unsubSettings, unsubHomepage, unsubHomepageOrder, unsubBanners);
+        unsubs.push(unsubCats, unsubProds, unsubCoups, unsubSettings, unsubHomepage, unsubHomepageOrder, unsubBanners, unsubBlacklist);
         set({ _unsubscribers: [...get()._unsubscribers, ...unsubs] });
       },
 
@@ -636,6 +645,40 @@ export const useAdminStore = create(
         } catch (error) {
           console.error("User tracking failed:", error);
           throw error;
+        }
+      },
+
+      toggleUserBlock: async (email, phone, isBlocked) => {
+        if (!email && !phone) return;
+        
+        try {
+          if (email) {
+            const targetEmail = email.toLowerCase();
+            if (targetEmail === 'monugandhi5911@gmail.com') {
+              toast.error('Cannot block Master Admin');
+              return;
+            }
+            await setDoc(doc(db, 'users', targetEmail), { isBlocked }, { merge: true });
+          }
+
+          const blacklistRef = doc(db, 'settings', 'blacklist');
+          const snap = await getDoc(blacklistRef);
+          let emails = snap.exists() ? snap.data().emails || [] : [];
+          let phones = snap.exists() ? snap.data().phones || [] : [];
+
+          if (isBlocked) {
+            if (email && !emails.includes(email.toLowerCase())) emails.push(email.toLowerCase());
+            if (phone && !phones.includes(phone)) phones.push(phone);
+          } else {
+            if (email) emails = emails.filter(e => e !== email.toLowerCase());
+            if (phone) phones = phones.filter(p => p !== phone);
+          }
+
+          await setDoc(blacklistRef, { emails, phones }, { merge: true });
+          toast.success(`User ${isBlocked ? 'blocked' : 'unblocked'} successfully!`);
+        } catch (error) {
+          console.error("Block User Error:", error);
+          toast.error("Failed to update block status");
         }
       },
 

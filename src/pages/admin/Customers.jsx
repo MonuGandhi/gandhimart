@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAdminStore } from '../../store/adminStore';
 import { useOrdersStore } from '../../store/ordersStore';
 import { formatPrice } from '../../utils/helpers';
-import { Phone, Shield, Truck, User, Trash2, Plus, Gift } from 'lucide-react';
+import { Phone, Shield, Truck, User, Trash2, Plus, Gift, Ban, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -14,6 +14,8 @@ export default function Customers() {
   const updateUserRole = useAdminStore((state) => state.updateUserRole);
   const deleteUser = useAdminStore((state) => state.deleteUser);
   const updateWalletBalance = useAdminStore((state) => state.updateWalletBalance);
+  const toggleUserBlock = useAdminStore((state) => state.toggleUserBlock);
+  const blacklist = useAdminStore((state) => state.blacklist) || { emails: [], phones: [] };
   const [searchParams] = useSearchParams();
   const [filterReferred, setFilterReferred] = useState(searchParams.get('filter') === 'referral');
 
@@ -61,14 +63,19 @@ export default function Customers() {
         referrerName = referrer ? referrer.name : c.referredBy;
       }
 
+      const isBlocked = c.isBlocked || 
+                        (c.email && blacklist.emails?.includes(c.email.toLowerCase())) || 
+                        (c.phone && blacklist.phones?.includes(c.phone));
+
       return {
         ...c,
         totalOrders: customerOrders.length,
         totalSpent,
-        referrerName
+        referrerName,
+        isBlocked
       };
     });
-  }, [registeredUsers, orders]);
+  }, [registeredUsers, orders, blacklist]);
 
   const filteredCustomers = useMemo(() => filterReferred
     ? customersWithStats.filter(c => c.referredBy)
@@ -201,6 +208,19 @@ export default function Customers() {
         console.error('Delete error:', err);
         toast.error('Failed to delete user: ' + err.message, { id: deleteToast });
       }
+    }
+  };
+
+  const handleToggleBlock = async (c) => {
+    if (c.id.startsWith('guest_')) {
+      toast.error('Cannot block guest users.');
+      return;
+    }
+    const action = c.isBlocked ? 'unblock' : 'block';
+    if (window.confirm(`Are you sure you want to ${action} this user?`)) {
+      const toastId = toast.loading(`${action === 'block' ? 'Blocking' : 'Unblocking'} user...`);
+      await toggleUserBlock(c.email, c.phone, !c.isBlocked);
+      toast.success(`User ${action}ed!`, { id: toastId });
     }
   };
 
@@ -399,7 +419,7 @@ export default function Customers() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredCustomers.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={c.id} className={`hover:bg-gray-50 transition-colors ${c.isBlocked ? 'bg-red-50/50' : ''}`}>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${c.role === 'pro_admin' ? 'bg-amber-500 shadow-lg shadow-amber-200' : c.role === 'admin' ? 'bg-purple-500' : c.role === 'delivery_boy' ? 'bg-blue-500' : 'bg-[#1CA672]'}`}>
@@ -417,7 +437,10 @@ export default function Customers() {
                         {c.email && (
                           <p className="text-[11px] text-gray-400 font-medium lowercase leading-tight mt-0.5">{c.email}</p>
                         )}
-                        <div className="mt-1.5">{getRoleBadge(c.role)}</div>
+                        <div className="mt-1.5 flex gap-1 flex-wrap">
+                          {getRoleBadge(c.role)}
+                          {c.isBlocked && <span className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border border-red-200"><Ban size={10} /> Blocked</span>}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -493,7 +516,16 @@ export default function Customers() {
                   <td className="p-4 text-sm text-gray-500">
                     {c.joinedDate ? new Date(c.joinedDate).toLocaleDateString() : (c.id.startsWith('guest_') ? 'N/A' : 'New User')}
                   </td>
-                  <td className="p-4 text-right space-x-2">
+                  <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                    {!c.id.startsWith('guest_') && (
+                      <button
+                        onClick={() => handleToggleBlock(c)}
+                        title={c.isBlocked ? 'Unblock User' : 'Block User'}
+                        className={`p-2 rounded-lg transition-colors inline-flex ${c.isBlocked ? 'text-green-500 hover:bg-green-50' : 'text-orange-500 hover:bg-orange-50'}`}
+                      >
+                        {c.isBlocked ? <Unlock size={18} /> : <Ban size={18} />}
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(c.id)}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors inline-flex"
