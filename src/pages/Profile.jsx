@@ -386,13 +386,11 @@ export default function Profile() {
   };
 
   const userOrders = orders.filter((o) => {
-    // 1. Email check
+    // 1. Email check (Strictly match by email only)
     if (o.customerEmail && user?.email && o.customerEmail.toLowerCase() === user.email.toLowerCase()) {
       return true;
     }
-    // 2. Safe Phone number check
-    const orderPhone = o.deliveryAddress?.phone || o.address?.phone || o.phone;
-    return comparePhones(orderPhone, user?.phone);
+    return false;
   });
 
   // ── Login Screen ────────────────────────────────────────────────────────────

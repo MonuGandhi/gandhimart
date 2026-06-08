@@ -40,11 +40,21 @@ export default function Customers() {
     // Add people who ordered but might not be in registeredUsers (guest checkouts if any)
     orders.forEach(order => {
       const phone = order.deliveryAddress?.phone || order.address?.phone;
-      if (phone && !allCustomers.some(c => comparePhones(c.phone, phone))) {
+      const email = order.customerEmail;
+      
+      let isExisting = false;
+      if (email) {
+        isExisting = allCustomers.some(c => c.email?.toLowerCase() === email.toLowerCase());
+      } else if (phone) {
+        isExisting = allCustomers.some(c => !c.email && comparePhones(c.phone, phone));
+      }
+
+      if (!isExisting && (email || phone)) {
         allCustomers.push({
           id: `guest_${order.id}`,
           name: order.deliveryAddress?.fullName || order.address?.name || 'Guest Customer',
-          phone: phone,
+          email: email || null,
+          phone: phone || 'N/A',
           role: 'customer',
           joinedDate: order.placedAt
         });
@@ -53,7 +63,18 @@ export default function Customers() {
 
     // Calculate stats for each customer
     return allCustomers.map(c => {
-      const customerOrders = orders.filter(o => comparePhones(o.deliveryAddress?.phone || o.address?.phone, c.phone));
+      const customerOrders = orders.filter(o => {
+        // If the customer has an email and order has an email, match by email
+        if (c.email && o.customerEmail) {
+          return c.email.toLowerCase() === o.customerEmail.toLowerCase();
+        }
+        // If neither has an email, match by phone (guest users)
+        if (!c.email && !o.customerEmail) {
+          return comparePhones(o.deliveryAddress?.phone || o.address?.phone, c.phone);
+        }
+        return false;
+      });
+
       const totalSpent = customerOrders.reduce((sum, o) => sum + (o.totalAmount || o.total || 0), 0);
 
       // Find who referred this customer (Lookup by their code)
