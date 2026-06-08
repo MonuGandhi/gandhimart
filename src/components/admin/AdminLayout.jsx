@@ -72,13 +72,28 @@ export default function AdminLayout() {
 
   const showBrowserNotification = (orderId) => {
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('🚨 NEW ORDER!', {
+      const title = '🚨 NEW ORDER!';
+      const options = {
         body: `Order #${orderId} received!`,
         icon: 'https://gandhimart-c9e7.vercel.app/logo.png',
         badge: 'https://gandhimart-c9e7.vercel.app/logo.png',
         tag: 'new-order',
         requireInteraction: true
-      });
+      };
+
+      try {
+        // Works on Desktop browsers
+        new Notification(title, options);
+      } catch (e) {
+        // Fails on Android Chrome with TypeError: Illegal constructor
+        if (e.name === 'TypeError' || e.message.includes('Illegal constructor')) {
+          if (navigator.serviceWorker) {
+            navigator.serviceWorker.ready.then(registration => {
+              registration.showNotification(title, options);
+            });
+          }
+        }
+      }
     }
   };
 
