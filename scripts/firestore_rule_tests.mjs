@@ -189,15 +189,74 @@ import fetch from 'node-fetch';
       false
     );
 
-    // 7) Small stock increase to 7 (return +2) should be ALLOWED
+    // 7) Stock increase attempt by client should be REJECTED
+    // NOTE: Stock restoring on cancel is done via admin/server only (correct behavior).
+    // Client-side stock increase is NOT allowed — this protects against inventory manipulation.
     await tryUpdate(
-      'Stock increase to 7 - return +2 (should allow)',
+      'Stock increase to 7 - client stock restore attempt (should reject)',
       'products/test-prod',
       { stock: 7 },
-      false
+      true  // expectReject = true (this is CORRECT — clients cannot increase stock)
     );
 
     console.log('\nAll tests finished. Check above for (expected) vs (UNEXPECTED - FAIL).');
+
+    // ── NEW SECURITY TESTS (Phase 1 additions) ──────────────────────────────
+
+    console.log('\n--- Phase 1 Security Tests ---');
+
+    // 8) Order with totalAmount=0 should be REJECTED
+    await tryCreate(
+      'Order with totalAmount=0 - zero rupee order (should reject)',
+      `orders/test-zero-amt-${RUN}`,
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: 0 },
+      true
+    );
+
+    // 9) Order with negative totalAmount should be REJECTED
+    await tryCreate(
+      'Order with totalAmount=-500 - negative amount (should reject)',
+      `orders/test-neg-amt-${RUN}`,
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: -500 },
+      true
+    );
+
+    // 10) Order with totalAmount > 1 lakh should be REJECTED
+    await tryCreate(
+      'Order with totalAmount=200000 - exceeds limit (should reject)',
+      `orders/test-big-amt-${RUN}`,
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: 200000 },
+      true
+    );
+
+    // 11) Valid order with reasonable totalAmount should be ALLOWED
+    await tryCreate(
+      'Order with totalAmount=499 - normal order (should allow)',
+      `orders/test-valid-amt-${RUN}`,
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: 499 },
+      false
+    );
+
+    // 12) Review with very long comment (>1000 chars) should be REJECTED
+    const longComment = 'A'.repeat(1001);
+    await tryCreate(
+      'Review with comment > 1000 chars (should reject)',
+      `products/test-prod/reviews/test-long-comment-${RUN}`,
+      { userEmail: testEmail.toLowerCase(), rating: 5, comment: longComment },
+      true
+    );
+
+    // 13) Review with normal comment should be ALLOWED (already tested above but re-confirm with comment)
+    await tryCreate(
+      'Review with normal comment under 1000 chars (should allow)',
+      `products/test-prod/reviews/test-normal-comment-${RUN}`,
+      { userEmail: testEmail.toLowerCase(), rating: 5, comment: 'Great product! Highly recommended.' },
+      false
+    );
+
+    console.log('\n--- All Phase 1 Security Tests Done ---');
+    console.log('Check above for (expected) vs (UNEXPECTED - FAIL).');
+
     process.exit(0);
   } catch (err) {
     console.error('Test script failed:', err);
