@@ -129,10 +129,10 @@ service cloud.firestore {
       allow create: if currentUserEmail() != "" && 
         request.resource.data.get('customerEmail', '') == currentUserEmail() &&
         request.resource.data.get('status', '') == 'placed' &&
-        // SECURITY: Order amount valid hona chahiye (0 ya negative order nahi)
-        request.resource.data.get('total', 0) is number &&
-        request.resource.data.get('total', 0) > 0 &&
-        request.resource.data.get('total', 0) <= 100000;
+        // SECURITY: Order amount valid hona chahiye (0 allowed hai agar wallet use hua, negative nahi)
+        request.resource.data.get('total', -1) is number &&
+        request.resource.data.get('total', -1) >= 0 &&
+        request.resource.data.get('total', -1) <= 100000;
       allow update, delete: if hasAdminAccess() || 
         (currentUserEmail() != "" && (
            // Case 1: Delivery boy updating status

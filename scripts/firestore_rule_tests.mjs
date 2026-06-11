@@ -205,12 +205,12 @@ import fetch from 'node-fetch';
 
     console.log('\n--- Phase 1 Security Tests ---');
 
-    // 8) Order with total=0 should be REJECTED
+    // 8) Order with total=0 should be ALLOWED (because of wallet payment)
     await tryCreate(
-      'Order with total=0 - zero rupee order (should reject)',
+      'Order with total=0 - zero rupee order via wallet (should allow)',
       `orders/test-zero-amt-${RUN}`,
       { customerEmail: testEmail.toLowerCase(), status: 'placed', total: 0 },
-      true
+      false // expectReject = false (allowed)
     );
 
     // 9) Order with negative total should be REJECTED
