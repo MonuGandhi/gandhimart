@@ -88,7 +88,7 @@ export default function Profile() {
 
         const googleUser = result.user;
         setTempUser({
-          name: googleUser.displayName || 'Customer',
+          name: '',
           email: googleUser.email,
           photoURL: googleUser.photoURL,
           uid: googleUser.uid,
@@ -235,7 +235,7 @@ export default function Profile() {
       const googleUser = result.user;
       
       setTempUser({
-        name: googleUser.displayName || 'Customer',
+        name: '',
         email: googleUser.email,
         photoURL: googleUser.photoURL,
         uid: googleUser.uid,
@@ -257,6 +257,10 @@ export default function Profile() {
 
   const handleSavePhone = (e) => {
     e.preventDefault();
+    if (!tempUser?.name?.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
     if (phone.length !== 10) {
       toast.error('Please enter a valid 10-digit mobile number');
       return;
@@ -288,7 +292,7 @@ export default function Profile() {
         // This is the important part: update the local auth store state
         // so that other components (like the coupon checker) have the phone number
         // immediately, without waiting for the next Firestore sync.
-        useAuthStore.getState().updateUser({ phone });
+        useAuthStore.getState().updateUser({ phone, name: tempUser.name });
 
         login(tempUser.name, phone, tempUser.email, tempUser.photoURL, tempUser.uid);
         
@@ -419,13 +423,18 @@ export default function Profile() {
             </div>
           ) : (
             <form onSubmit={handleSavePhone} className="w-full max-w-sm space-y-4 animate-in fade-in slide-in-from-right-4">
+              <input
+                type="text" placeholder="Your Full Name" value={tempUser?.name || ''}
+                onChange={(e) => setTempUser({ ...tempUser, name: e.target.value })}
+                className="w-full bg-white border-2 border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold focus:outline-none focus:border-[#1CA672] transition-colors"
+                autoFocus
+              />
               <div className="flex gap-2">
                 <div className="bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3.5 text-sm text-gray-500 font-bold flex items-center justify-center">+91</div>
                 <input
                   type="tel" placeholder="Mobile Number" value={phone}
                   onChange={(e) => setPhone(e.target.value)} maxLength={10}
                   className="flex-1 bg-white border-2 border-gray-100 rounded-xl px-4 py-3.5 text-sm font-bold focus:outline-none focus:border-[#1CA672] transition-colors"
-                  autoFocus
                 />
               </div>
 
