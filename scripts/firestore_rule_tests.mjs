@@ -161,7 +161,7 @@ import fetch from 'node-fetch';
     await tryCreate(
       'Order create with status=delivered (should reject)',
       `orders/test-order-${RUN}`,
-      { customerEmail: testEmail.toLowerCase(), status: 'delivered', totalAmount: 100 },
+      { customerEmail: testEmail.toLowerCase(), status: 'delivered', total: 100 },
       true
     );
 
@@ -169,7 +169,7 @@ import fetch from 'node-fetch';
     await tryCreate(
       'Order create with status=placed (should allow)',
       `orders/test-order-placed-${RUN}`,
-      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: 100 },
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', total: 100 },
       false
     );
 
@@ -205,35 +205,35 @@ import fetch from 'node-fetch';
 
     console.log('\n--- Phase 1 Security Tests ---');
 
-    // 8) Order with totalAmount=0 should be REJECTED
+    // 8) Order with total=0 should be REJECTED
     await tryCreate(
-      'Order with totalAmount=0 - zero rupee order (should reject)',
+      'Order with total=0 - zero rupee order (should reject)',
       `orders/test-zero-amt-${RUN}`,
-      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: 0 },
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', total: 0 },
       true
     );
 
-    // 9) Order with negative totalAmount should be REJECTED
+    // 9) Order with negative total should be REJECTED
     await tryCreate(
-      'Order with totalAmount=-500 - negative amount (should reject)',
+      'Order with total=-500 - negative amount (should reject)',
       `orders/test-neg-amt-${RUN}`,
-      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: -500 },
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', total: -500 },
       true
     );
 
-    // 10) Order with totalAmount > 1 lakh should be REJECTED
+    // 10) Order with total > 1 lakh should be REJECTED
     await tryCreate(
-      'Order with totalAmount=200000 - exceeds limit (should reject)',
+      'Order with total=200000 - exceeds limit (should reject)',
       `orders/test-big-amt-${RUN}`,
-      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: 200000 },
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', total: 200000 },
       true
     );
 
-    // 11) Valid order with reasonable totalAmount should be ALLOWED
+    // 11) Valid order with reasonable total should be ALLOWED
     await tryCreate(
-      'Order with totalAmount=499 - normal order (should allow)',
+      'Order with total=499 - normal order (should allow)',
       `orders/test-valid-amt-${RUN}`,
-      { customerEmail: testEmail.toLowerCase(), status: 'placed', totalAmount: 499 },
+      { customerEmail: testEmail.toLowerCase(), status: 'placed', total: 499 },
       false
     );
 

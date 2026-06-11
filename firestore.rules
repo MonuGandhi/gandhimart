@@ -130,9 +130,9 @@ service cloud.firestore {
         request.resource.data.get('customerEmail', '') == currentUserEmail() &&
         request.resource.data.get('status', '') == 'placed' &&
         // SECURITY: Order amount valid hona chahiye (0 ya negative order nahi)
-        request.resource.data.get('totalAmount', 0) is number &&
-        request.resource.data.get('totalAmount', 0) > 0 &&
-        request.resource.data.get('totalAmount', 0) <= 100000;
+        request.resource.data.get('total', 0) is number &&
+        request.resource.data.get('total', 0) > 0 &&
+        request.resource.data.get('total', 0) <= 100000;
       allow update, delete: if hasAdminAccess() || 
         (currentUserEmail() != "" && (
            // Case 1: Delivery boy updating status
