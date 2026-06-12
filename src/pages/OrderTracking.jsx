@@ -432,9 +432,40 @@ export default function OrderTracking() {
                 ))}
              </div>
 
-             <div className="mt-6 pt-6 border-t border-dashed border-gray-100 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-sm font-black text-gray-900 dark:text-white">Total Paid</span>
-                <span className="text-lg font-black text-gray-900 dark:text-white">{formatPrice(order.total)}</span>
+             <div className="mt-6 space-y-2 border-t border-dashed border-gray-100 dark:border-slate-800 pt-6">
+                <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Subtotal</span>
+                    <span className="font-bold text-gray-800 dark:text-gray-200">{formatPrice(order.subtotal || order.totalAmount)}</span>
+                </div>
+                {order.productDiscount > 0 && (
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Product Discount</span>
+                        <span className="font-bold text-[#1CA672]">-{formatPrice(order.productDiscount)}</span>
+                    </div>
+                )}
+                {order.couponDiscount > 0 && (
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Coupon ({order.couponCode})</span>
+                        <span className="font-bold text-[#1CA672]">-{formatPrice(order.couponDiscount)}</span>
+                    </div>
+                )}
+                <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Delivery Fee</span>
+                    <span className={`font-bold ${order.deliveryFee === 0 ? 'text-[#1CA672]' : 'text-gray-800 dark:text-gray-200'}`}>
+                        {order.deliveryFee === 0 ? 'FREE' : formatPrice(order.deliveryFee)}
+                    </span>
+                </div>
+                {order.walletUsed > 0 && (
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Paid from Wallet</span>
+                        <span className="font-bold text-[#1CA672]">-{formatPrice(order.walletUsed)}</span>
+                    </div>
+                )}
+                <div className="h-px bg-gray-100 dark:bg-slate-800 my-2" />
+                <div className="flex justify-between items-center">
+                    <span className="text-base font-black text-gray-900 dark:text-white">Total Paid</span>
+                    <span className="text-lg font-black text-gray-900 dark:text-white">{formatPrice(order.total)}</span>
+                </div>
              </div>
           </div>
 
