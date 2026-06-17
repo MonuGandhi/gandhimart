@@ -321,22 +321,18 @@ export default function Checkout() {
             }
         } catch (locationError) {
             console.error('Location validation error:', locationError);
-            try {
-                if (navigator.permissions && navigator.permissions.query) {
-                    const perm = await navigator.permissions.query({ name: 'geolocation' });
-                    if (perm.state === 'denied') {
-                        toast.error('Location permission is denied in your browser. Enable it in site settings and try again.');
-                        setLoading(false);
-                        return;
-                    }
-                }
-            } catch (permErr) {
-                console.warn('Permission query failed:', permErr);
+            
+            // User-friendly error messages based on GeolocationPositionError codes
+            if (locationError?.code === 1) { // PERMISSION_DENIED
+                toast.error('Location permission blocked hai! Upar URL bar me (🔒) icon daba kar Allow karein.', { duration: 6000 });
+            } else if (locationError?.code === 2) { // POSITION_UNAVAILABLE
+                toast.error('GPS band hai! Kripya phone ki Location/GPS on karein aur dobara Order Place dabayein.', { duration: 6000 });
+            } else if (locationError?.code === 3) { // TIMEOUT
+                toast.error('Location milne me time lag raha hai. Apne phone ka GPS check karein aur dobara try karein.', { duration: 5000 });
+            } else {
+                toast.error('Location fetch nahi ho payi. Kripya GPS on karein aur dobara try karein! 😊', { duration: 5000 });
             }
-
-            const code = locationError?.code || locationError?.name || 'UNKNOWN';
-            const msg = locationError?.message || String(locationError);
-            toast.error(`Location check failed (${code}): ${msg}. Please enable location and retry.`);
+            
             setLoading(false);
             return;
         }
