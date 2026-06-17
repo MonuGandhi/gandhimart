@@ -385,11 +385,10 @@ export default function Checkout() {
             // Add order to batch
             batch.set(orderRef, orderData);
 
+            const userUpdates = {};
+            
             if (walletDeduction > 0 && user?.email) {
-                const userRef = doc(db, 'users', user.email.toLowerCase());
-                batch.update(userRef, {
-                    walletBalance: increment(-walletDeduction)
-                });
+                userUpdates.walletBalance = increment(-walletDeduction);
                 // Log transaction in background (non-blocking)
                 logWalletTransaction(user.email.toLowerCase(), -walletDeduction, 'debit', `Used for order #${orderId}`).catch(err => {
                     console.error('Wallet log error:', err);
@@ -397,10 +396,7 @@ export default function Checkout() {
             }
 
             if (appliedReferral && user?.email && !user?.referredBy) {
-                const userRef = doc(db, 'users', user.email.toLowerCase());
-                batch.update(userRef, {
-                    referredBy: appliedReferral.code
-                });
+                userUpdates.referredBy = appliedReferral.code;
             }
 
             // Increment coupon usedCount and add to user's used list
@@ -409,11 +405,12 @@ export default function Checkout() {
                 batch.update(couponRef, {
                     usedCount: increment(1)
                 });
+                userUpdates.usedCoupons = arrayUnion(appliedCoupon.code);
+            }
 
+            if (Object.keys(userUpdates).length > 0 && user?.email) {
                 const userRef = doc(db, 'users', user.email.toLowerCase());
-                batch.update(userRef, {
-                    usedCoupons: arrayUnion(appliedCoupon.code)
-                });
+                batch.update(userRef, userUpdates);
             }
 
             await batch.commit();
