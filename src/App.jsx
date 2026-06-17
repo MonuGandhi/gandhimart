@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useEffect } from 'react';
+import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 import { lazy, Suspense } from 'react';
 
@@ -117,6 +119,19 @@ const AppContent = () => {
   const initNotifsFirebase = useNotificationStore((s) => s.initFirebase);
   const initOrdersFirebase = useOrdersStore((s) => s.initFirebase);
   const initAuthFirebase = useAuthStore((s) => s.initFirebase);
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const logout = useAuthStore((s) => s.logout);
+
+  // Sync Firebase Auth with Zustand to fix permission errors on session expiry
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser && isLoggedIn) {
+        console.warn('Firebase Auth state mismatch (user is null). Logging out from Zustand to prevent permission errors.');
+        logout();
+      }
+    });
+    return () => unsubscribeAuth();
+  }, [isLoggedIn, logout]);
 
   useEffect(() => {
     initializeAdminStore(user);
