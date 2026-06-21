@@ -56,8 +56,13 @@ export default function Orders() {
 
   const [referrerInfo, setReferrerInfo] = useState(null);
 
-  const getCustomerName = (order) => order.deliveryAddress?.fullName || order.address?.name || order.customerName || 'Customer';
-  const getCustomerPhone = (order) => order.deliveryAddress?.phone || order.address?.phone || order.phone || '';
+  const getCustomerName = (order) => {
+    const name = order.address?.name || order.deliveryAddress?.fullName || order.customerName;
+    return (name && name !== 'Customer') ? name : 'Customer';
+  };
+  const getCustomerPhone = (order) => {
+    return order.address?.phone || order.deliveryAddress?.phone || order.customerPhone || order.phone || '';
+  };
   const getOrderTotal = (order) => Number(order.totalAmount || order.total || 0);
 
   const checkOrderSecurity = (order) => {
@@ -339,7 +344,7 @@ export default function Orders() {
     try {
       let customerEmail = (order.customerEmail || order.id.split('_')[0])?.toLowerCase();
       if (!customerEmail) {
-        const phone = order.deliveryAddress?.phone || order.address?.phone || order.customerPhone;
+        const phone = getCustomerPhone(order);
         if (phone) {
           const cleanedPhone = String(phone).replace(/\D/g, '').slice(-10);
           if (cleanedPhone.length === 10) {
@@ -378,7 +383,7 @@ export default function Orders() {
           message: `₹${refundAmount} has been credited back to your wallet for order #${order.id}.`,
           type: 'promo',
           email: customerEmail,
-          phone: order.deliveryAddress?.phone || order.address?.phone
+          phone: getCustomerPhone(order)
         });
       } catch (e) { console.error('Notification failed', e); }
 
@@ -518,8 +523,8 @@ export default function Orders() {
                     )}
                   </td>
                   <td className="p-4">
-                    <p className="font-bold text-gray-900">{o.deliveryAddress?.fullName || o.address?.name || 'N/A'}</p>
-                    <p className="text-sm text-gray-500">{o.deliveryAddress?.phone || o.address?.phone || 'N/A'}</p>
+                    <p className="font-bold text-gray-900">{getCustomerName(o)}</p>
+                    <p className="text-sm text-gray-500">{getCustomerPhone(o)}</p>
                   </td>
                   <td className="p-4">
                     <p className="font-bold text-gray-900">{formatPrice(o.totalAmount || o.total)}</p>
@@ -599,8 +604,9 @@ export default function Orders() {
               <div>
                 <h3 className="font-bold text-gray-900 mb-2">Customer Details</h3>
                 <div className="bg-gray-50 p-3 rounded-xl text-sm space-y-2 relative">
-                  <p><span className="font-semibold">Name:</span> {selectedOrder.deliveryAddress?.fullName || selectedOrder.address?.name}</p>
-                  <p><span className="font-semibold">Phone:</span> {selectedOrder.deliveryAddress?.phone || selectedOrder.address?.phone}</p>
+                  <p><span className="font-semibold">Name:</span> {getCustomerName(selectedOrder)}</p>
+                  <p><span className="font-semibold">Phone:</span> {getCustomerPhone(selectedOrder)}</p>
+                  <p><span className="font-semibold">Delivery Name:</span> {selectedOrder.deliveryAddress?.fullName || selectedOrder.address?.name}</p>
                   <p><span className="font-semibold">Address:</span> {
                     selectedOrder.deliveryAddress 
                       ? `${selectedOrder.deliveryAddress.addressLine1}${selectedOrder.deliveryAddress.addressLine2 ? ', ' + selectedOrder.deliveryAddress.addressLine2 : ''}, ${selectedOrder.deliveryAddress.city} - ${selectedOrder.deliveryAddress.pincode}`
@@ -608,9 +614,9 @@ export default function Orders() {
                   }</p>
                   <button 
                     onClick={() => {
-                      const phone = selectedOrder.deliveryAddress?.phone || selectedOrder.address?.phone;
+                      const phone = getCustomerPhone(selectedOrder);
                       if (!phone) return toast.error('No phone number found');
-                      const name = selectedOrder.deliveryAddress?.fullName || selectedOrder.address?.name || 'Customer';
+                      const name = getCustomerName(selectedOrder);
                       const statusText = selectedOrder.status.replace(/_/g, ' ').toUpperCase();
                       const msg = `Hello ${name},\n\nYour G Mart order *#${selectedOrder.id}* is now *${statusText}*.\n\nThank you for shopping with us! 🛒`;
                       window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');

@@ -354,10 +354,10 @@ export default function Checkout() {
             const orderData = {
                 id: orderId,
                 items: items.filter(i => i && i.name), // Safety filter
-                customerName: user?.name || 'Customer',
+                customerName: normalizedAddress.name || user?.name || 'Customer',
                 customerUid: user?.uid || null,
                 customerEmail: user?.email?.toLowerCase() || '',
-                customerPhone: cleanedPhone || user?.phone || '',
+                customerPhone: normalizedAddress.phone || user?.phone || cleanedPhone || '',
                 customerAccountType: 'registered',
                 isGuestOrder: false,
                 address: normalizedAddress, // Consistency: use 'address' key
