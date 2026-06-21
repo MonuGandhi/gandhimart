@@ -110,11 +110,10 @@ export default function DeliveryDashboard() {
 
                 <div className="flex items-center gap-3 text-gray-500 mb-4">
                   <MapPin size={14} className="shrink-0 text-blue-500" />
-                  <p className="text-xs font-medium line-clamp-1">
-                    {order.deliveryAddress 
-                      ? `${order.deliveryAddress.addressLine1}, ${order.deliveryAddress.city}`
-                      : `${order.address?.text}, ${order.address?.city}`
-                    }
+                  <p className="text-xs font-medium line-clamp-2">
+                    {selectedOrder?.address?.address || order.address?.address || order.deliveryAddress?.addressLine1 || 'Address not set'}
+                    {(order.address?.village || order.deliveryAddress?.city) && 
+                      `, ${order.address?.village || order.deliveryAddress?.city}`}
                   </p>
                 </div>
 
@@ -122,8 +121,8 @@ export default function DeliveryDashboard() {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      const phone = order.deliveryAddress?.phone || order.address?.phone;
-                      window.open(`tel:+91${phone}`);
+                      const phone = order.address?.phone || order.deliveryAddress?.phone || order.customerPhone;
+                      if (phone) window.open(`tel:+91${phone}`);
                     }}
                     className="flex-1 bg-gray-50 text-gray-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-gray-100"
                   >
@@ -174,37 +173,83 @@ export default function DeliveryDashboard() {
             <div className="bg-gray-50 rounded-3xl p-5 mb-6 border border-gray-100">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-500">
-                  <MapPin size={24} />
+                  <User size={24} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Delivery Location</p>
-                  <p className="text-sm font-black text-gray-900 mb-1">{selectedOrder.deliveryAddress?.fullName || selectedOrder.address?.name}</p>
-                  <p className="text-xs font-medium text-gray-500 leading-relaxed">
-                    {selectedOrder.deliveryAddress 
-                      ? `${selectedOrder.deliveryAddress.addressLine1}, ${selectedOrder.deliveryAddress.addressLine2 ? selectedOrder.deliveryAddress.addressLine2 + ', ' : ''}${selectedOrder.deliveryAddress.city} - ${selectedOrder.deliveryAddress.pincode}`
-                      : `${selectedOrder.address?.text}, ${selectedOrder.address?.city} - ${selectedOrder.address?.pincode}`
-                    }
-                  </p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Customer Details</p>
+                  <p className="text-sm font-black text-gray-900 mb-0.5">{selectedOrder.address?.name || selectedOrder.deliveryAddress?.fullName || selectedOrder.customerName || 'Customer'}</p>
+                  <p className="text-xs font-bold text-blue-600">{selectedOrder.address?.phone || selectedOrder.deliveryAddress?.phone || selectedOrder.customerPhone || ''}</p>
                 </div>
               </div>
+
+              {/* Full Address */}
+              <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
+                <div className="flex items-start gap-3">
+                  <MapPin size={16} className="text-[#1CA672] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Delivery Address</p>
+                    <p className="text-sm font-medium text-gray-800 leading-relaxed">
+                      {selectedOrder.address?.address || selectedOrder.deliveryAddress?.addressLine1 || 'Address not available'}
+                      {(selectedOrder.address?.village || selectedOrder.deliveryAddress?.addressLine2) && 
+                        `, ${selectedOrder.address?.village || selectedOrder.deliveryAddress?.addressLine2}`}
+                      {(selectedOrder.address?.city || selectedOrder.deliveryAddress?.city) && 
+                        `, ${selectedOrder.address?.city || selectedOrder.deliveryAddress?.city}`}
+                      {(selectedOrder.address?.pincode || selectedOrder.deliveryAddress?.pincode) && 
+                        ` - ${selectedOrder.address?.pincode || selectedOrder.deliveryAddress?.pincode}`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Map */}
+              {(selectedOrder.deliveryLat && selectedOrder.deliveryLng) && (
+                <div className="mt-4">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">📍 Customer Location on Map</p>
+                  <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    <iframe
+                      title="Delivery location map"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(selectedOrder.deliveryLng) - 0.008}%2C${Number(selectedOrder.deliveryLat) - 0.008}%2C${Number(selectedOrder.deliveryLng) + 0.008}%2C${Number(selectedOrder.deliveryLat) + 0.008}&layer=mapnik&marker=${selectedOrder.deliveryLat}%2C${selectedOrder.deliveryLng}`}
+                      className="w-full h-48"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              )}
               
-              <div className="grid grid-cols-2 gap-3 mt-5">
+              <div className="grid grid-cols-3 gap-2 mt-4">
                 <button 
-                  onClick={() => window.open(`tel:+91${selectedOrder.deliveryAddress?.phone || selectedOrder.address?.phone}`)}
-                  className="flex items-center justify-center gap-2 bg-white text-gray-900 font-bold py-3.5 rounded-2xl border border-gray-200 shadow-sm hover:bg-gray-100"
+                  onClick={() => window.open(`tel:+91${selectedOrder.address?.phone || selectedOrder.deliveryAddress?.phone || selectedOrder.customerPhone}`)}
+                  className="flex items-center justify-center gap-1.5 bg-white text-gray-900 font-bold py-3 rounded-2xl border border-gray-200 shadow-sm hover:bg-gray-100 text-xs"
                 >
-                  <Phone size={18} className="text-[#1CA672]" /> Call
+                  <Phone size={15} className="text-[#1CA672]" /> Call
                 </button>
                 <button 
                   onClick={() => {
-                    const addr = selectedOrder.deliveryAddress 
-                      ? `${selectedOrder.deliveryAddress.addressLine1}, ${selectedOrder.deliveryAddress.city}`
-                      : selectedOrder.address?.text;
-                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`);
+                    const lat = selectedOrder.deliveryLat;
+                    const lng = selectedOrder.deliveryLng;
+                    if (lat && lng) {
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                    } else {
+                      const addr = selectedOrder.address?.address 
+                        ? `${selectedOrder.address.address}, ${selectedOrder.address.village || ''}`
+                        : selectedOrder.deliveryAddress?.addressLine1 || '';
+                      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`, '_blank');
+                    }
                   }}
-                  className="flex items-center justify-center gap-2 bg-gray-900 text-white font-bold py-3.5 rounded-2xl shadow-lg hover:bg-black"
+                  className="flex items-center justify-center gap-1.5 bg-gray-900 text-white font-bold py-3 rounded-2xl shadow-lg hover:bg-black text-xs"
                 >
-                  <Navigation size={18} className="text-blue-400" /> Maps
+                  <Navigation size={15} className="text-blue-400" /> Navigate
+                </button>
+                <button 
+                  onClick={() => {
+                    const phone = selectedOrder.address?.phone || selectedOrder.deliveryAddress?.phone || selectedOrder.customerPhone;
+                    const name = selectedOrder.address?.name || selectedOrder.deliveryAddress?.fullName || selectedOrder.customerName || 'Customer';
+                    const msg = `Hello ${name}, main aapka G Mart delivery partner hoon. Main aapke order #${selectedOrder.id} ke saath aapke ghar ke paas aaya hoon. Kripya apna order collect karein. Thank you! 🛒`;
+                    window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+                  }}
+                  className="flex items-center justify-center gap-1.5 bg-[#25D366] text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-[#1DA851] text-xs"
+                >
+                  <MessageCircle size={15} /> Chat
                 </button>
               </div>
             </div>
@@ -242,10 +287,10 @@ export default function DeliveryDashboard() {
               
               <button 
                 onClick={() => {
-                  const phone = selectedOrder.deliveryAddress?.phone || selectedOrder.address?.phone;
-                  const name = selectedOrder.deliveryAddress?.fullName || selectedOrder.address?.name || 'Customer';
-                  const msg = `Hello ${name}, I am your G Mart delivery partner. I am outside your location with your order #${selectedOrder.id}. Please collect it. Thank you! 🛒`;
-                  window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`);
+                  const phone = selectedOrder.address?.phone || selectedOrder.deliveryAddress?.phone || selectedOrder.customerPhone;
+                  const name = selectedOrder.address?.name || selectedOrder.deliveryAddress?.fullName || selectedOrder.customerName || 'Customer';
+                  const msg = `Hello ${name}, main aapka G Mart delivery partner hoon. Main aapke order #${selectedOrder.id} ke saath aapke ghar ke paas hoon. Kripya apna order collect karein. Thank you! 🛒`;
+                  window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, '_blank');
                 }}
                 className="w-full bg-white text-gray-900 font-bold py-4 rounded-[1.5rem] flex items-center justify-center gap-3 border-2 border-gray-100 active:scale-95 transition-transform"
               >
