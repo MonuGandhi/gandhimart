@@ -60,6 +60,7 @@ export default function Checkout() {
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [locationPermissionState, setLocationPermissionState] = useState('unknown');
     const locModalResolver = useRef(null);
+    const locationFailCount = useRef(0);
 
     const refreshLocationPermission = async () => {
         try {
@@ -274,15 +275,39 @@ export default function Checkout() {
             return;
         }
 
-        // Check location permission BEFORE showing loading (instant check)
-        // Note: Safari iOS doesn't support permissions API for geolocation, so state is 'unknown'. We must let them proceed.
-        if (locationPermissionState === 'prompt') {
+        // ── Location Logic: Try first, but allow after 3 failed attempts ──
+        const MAX_LOCATION_TRIES = 3;
+        let locationObtained = false;
+        let skipLocation = locationFailCount.current >= MAX_LOCATION_TRIES;
+
+        // If user has already failed 3+ times, validate address is detailed
+        if (skipLocation) {
+            const addr = addressForm.address?.trim() || '';
+            if (addr.length < 20) {
+                toast.error('Location on nahi ho payi 😔 Kripya apna pura address detail mein likhein (ghar no., gali, mohalla, landmark) taaki hum delivery kar sakein!', { duration: 7000 });
+                setEditingAddress(true);
+                return;
+            }
+        }
+
+        // First attempt: try to prompt for location if not yet denied
+        if (!skipLocation && locationPermissionState === 'prompt') {
             setShowLocationModal(true);
-            toast('Pehle location access chalu karein! 😊', { icon: '📍' });
+            locationFailCount.current += 1;
+            if (locationFailCount.current >= MAX_LOCATION_TRIES) {
+                toast('Location on nahi ho rahi? Koi baat nahi! Apna address sahi se fill karke dobara Place Order dabayein 😊', { icon: '📍', duration: 6000 });
+            } else {
+                toast('Pehle location access chalu karein! 😊', { icon: '📍' });
+            }
             return;
         }
-        if (locationPermissionState === 'denied') {
-            toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
+        if (!skipLocation && locationPermissionState === 'denied') {
+            locationFailCount.current += 1;
+            if (locationFailCount.current >= MAX_LOCATION_TRIES) {
+                toast('Location blocked hai, koi baat nahi! Apna pura address sahi se likhein aur dobara Place Order dabayein 😊', { icon: '📍', duration: 6000 });
+            } else {
+                toast.error('Location blocked hai! Upar URL bar me Tala (🔒) icon par click karke isko Allow karein. 🔑', { duration: 6000 });
+            }
             return;
         }
 
@@ -291,50 +316,62 @@ export default function Checkout() {
 
         // Location validation — use cached location first for speed
         const isLocationRestrictionEnabled = !!storeSettings?.locationService?.enabled;
-        try {
-            // Try cached location first (< 2 min old) for instant response
-            const cachedLoc = locationService.getCachedLocation();
-            const isCacheFresh = cachedLoc?.timestamp && (Date.now() - cachedLoc.timestamp < 120000);
-            const currentLocation = isCacheFresh ? cachedLoc : await locationService.getCurrentLocation();
+        let currentLocation = null;
 
-            if (isLocationRestrictionEnabled) {
-                const settings = storeSettings.locationService || {};
-                locationService.updateServiceArea({
-                    ...settings,
-                    name: settings.villageName || settings.name || 'My Village',
-                });
+        if (!skipLocation) {
+            try {
+                // Try cached location first (< 2 min old) for instant response
+                const cachedLoc = locationService.getCachedLocation();
+                const isCacheFresh = cachedLoc?.timestamp && (Date.now() - cachedLoc.timestamp < 120000);
+                currentLocation = isCacheFresh ? cachedLoc : await locationService.getCurrentLocation();
 
-                const isWithinArea = await locationService.isWithinServiceArea(currentLocation);
+                if (isLocationRestrictionEnabled && currentLocation) {
+                    const settings = storeSettings.locationService || {};
+                    locationService.updateServiceArea({
+                        ...settings,
+                        name: settings.villageName || settings.name || 'My Village',
+                    });
 
-                if (!isWithinArea) {
-                    const outOfAreaMessage = locationService.getOutOfAreaMessage();
-                    toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
+                    const isWithinArea = await locationService.isWithinServiceArea(currentLocation);
+
+                    if (!isWithinArea) {
+                        const outOfAreaMessage = locationService.getOutOfAreaMessage();
+                        toast.error(outOfAreaMessage?.message || 'Sorry, we do not deliver to your area yet.');
+                        setLoading(false);
+                        return;
+                    }
+                }
+
+                if (currentLocation) {
+                    locationObtained = true;
+                    locationFailCount.current = 0; // Reset on success
+                }
+            } catch (locationError) {
+                console.error('Location validation error:', locationError);
+                locationFailCount.current += 1;
+
+                if (locationFailCount.current >= MAX_LOCATION_TRIES) {
+                    // Allow order without location — show friendly message
+                    toast('Location nahi mili, lekin order place ho jayega! 😊 Bas address sahi hona chahiye.', { icon: '✅', duration: 5000 });
+                    skipLocation = true;
+                } else {
+                    // Still have tries left — show error and block
+                    if (locationError?.code === 1) {
+                        toast.error('Location permission blocked hai! Upar URL bar me (🔒) icon daba kar Allow karein.', { duration: 6000 });
+                    } else if (locationError?.code === 2) {
+                        toast.error('GPS band hai! Kripya phone ki Location/GPS on karein aur dobara Order Place dabayein.', { duration: 6000 });
+                    } else if (locationError?.code === 3) {
+                        toast.error('Location milne me time lag raha hai. Apne phone ka GPS check karein aur dobara try karein.', { duration: 5000 });
+                    } else {
+                        toast.error('Location fetch nahi ho payi. Kripya GPS on karein aur dobara try karein! 😊', { duration: 5000 });
+                    }
                     setLoading(false);
                     return;
                 }
             }
-
-            if (!currentLocation) {
-                toast.error('Current location nahi mili. Upar wale section se Allow Current Location dabao.');
-                setLoading(false);
-                return;
-            }
-        } catch (locationError) {
-            console.error('Location validation error:', locationError);
-            
-            // User-friendly error messages based on GeolocationPositionError codes
-            if (locationError?.code === 1) { // PERMISSION_DENIED
-                toast.error('Location permission blocked hai! Upar URL bar me (🔒) icon daba kar Allow karein.', { duration: 6000 });
-            } else if (locationError?.code === 2) { // POSITION_UNAVAILABLE
-                toast.error('GPS band hai! Kripya phone ki Location/GPS on karein aur dobara Order Place dabayein.', { duration: 6000 });
-            } else if (locationError?.code === 3) { // TIMEOUT
-                toast.error('Location milne me time lag raha hai. Apne phone ka GPS check karein aur dobara try karein.', { duration: 5000 });
-            } else {
-                toast.error('Location fetch nahi ho payi. Kripya GPS on karein aur dobara try karein! 😊', { duration: 5000 });
-            }
-            
-            setLoading(false);
-            return;
+        } else {
+            // skipLocation=true from start, proceed without location
+            toast('Address ke basis par order place ho raha hai 📦', { icon: '✅', duration: 3000 });
         }
 
         const normalizedAddress = { ...addressForm, phone: cleanedPhone };
