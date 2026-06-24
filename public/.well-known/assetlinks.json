@@ -1,11 +1,12 @@
 [{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "app.vercel.gandhimart_c9e7.twa",
-        "sha256_cert_fingerprints": [
-          "F8:9F:05:60:0B:7E:CA:D0:53:93:27:FB:11:44:0C:AD:AB:C2:4F:D1:B3:2A:E7:AD:7D:B4:68:78:C5:26:29:8D",
-          "18:F1:E9:54:F0:48:4B:D6:7D:28:4D:21:14:DB:6D:CC:55:07:22:83:CD:64:8B:A1:79:C7:09:57:E9:82:C7:0F"
-        ]
-      }
-    }]
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.gandhimart_c9e7.twa",
+    "sha256_cert_fingerprints": [
+      "E7:32:A3:D6:70:C7:B6:3F:9E:1F:05:B2:DD:D1:B4:18:A8:20:DB:EC:4D:85:2B:FB:6F:81:3E:D4:95:51:75:57",
+      "F8:9F:05:60:0B:7E:CA:D0:53:93:27:FB:11:44:0C:AD:AB:C2:4F:D1:B3:2A:E7:AD:7D:B4:68:78:C5:26:29:8D",
+      "18:F1:E9:54:F0:48:4B:D6:7D:28:4D:21:14:DB:6D:CC:55:07:22:83:CD:64:8B:A1:79:C7:09:57:E9:82:C7:0F"
+    ]
+  }
+}]
