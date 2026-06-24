@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.gandhimart_c9e7.twa",
+        "sha256_cert_fingerprints": ["18:F1:E9:54:F0:48:4B:D6:7D:28:4D:21:14:DB:6D:CC:55:07:22:83:CD:64:8B:A1:79:C7:09:57:E9:82:C7:0F"]
+      }
+    }]
