@@ -3,6 +3,9 @@
       "target": {
         "namespace": "android_app",
         "package_name": "app.vercel.gandhimart_c9e7.twa",
-        "sha256_cert_fingerprints": ["18:F1:E9:54:F0:48:4B:D6:7D:28:4D:21:14:DB:6D:CC:55:07:22:83:CD:64:8B:A1:79:C7:09:57:E9:82:C7:0F"]
+        "sha256_cert_fingerprints": [
+          "F8:9F:05:60:0B:7E:CA:D0:53:93:27:FB:11:44:0C:AD:AB:C2:4F:D1:B3:2A:E7:AD:7D:B4:68:78:C5:26:29:8D",
+          "18:F1:E9:54:F0:48:4B:D6:7D:28:4D:21:14:DB:6D:CC:55:07:22:83:CD:64:8B:A1:79:C7:09:57:E9:82:C7:0F"
+        ]
       }
     }]
