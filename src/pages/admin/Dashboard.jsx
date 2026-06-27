@@ -957,7 +957,14 @@ export default function Dashboard() {
             <tbody className="divide-y divide-gray-100">
               {orders.slice(0, 10).map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate('/admin/orders')}>
-                  <td className="p-4 text-sm font-bold text-gray-900">#{order.id}</td>
+                  <td className="p-4 text-sm font-bold text-gray-900">
+                    #{order.id}
+                    {order.isLocationVerified === false && (
+                      <div className="mt-1 flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-md border border-red-200 w-max">
+                        <span className="text-[10px] font-black uppercase tracking-wider">⚠️ Loc Not Verified</span>
+                      </div>
+                    )}
+                  </td>
                   <td className="p-4 text-sm text-gray-600">{order.items?.length || 0} items</td>
                   <td className="p-4 text-sm font-bold text-gray-900">{formatPrice(order.totalAmount || order.total)}</td>
                   <td className="p-4">

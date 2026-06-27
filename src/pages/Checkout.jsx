@@ -76,7 +76,20 @@ export default function Checkout() {
     };
 
     useEffect(() => {
-        refreshLocationPermission();
+        refreshLocationPermission().then(() => {
+            // Pre-fetch or pre-prompt as soon as Checkout loads
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' }).then((perm) => {
+                    if (perm.state === 'prompt') {
+                        // Soft prompt user before they even click "Place Order"
+                        setShowLocationModal(true);
+                    } else if (perm.state === 'granted') {
+                        // Fetch silently in background so it's ready!
+                        locationService.getCurrentLocation().catch(() => {});
+                    }
+                });
+            }
+        });
     }, []);
 
     const requestCurrentLocationAccess = async ({ fromBanner = false } = {}) => {
@@ -411,6 +424,7 @@ export default function Checkout() {
                 placedAt: new Date().toISOString(),
                 referralCode: appliedReferral?.code || null, // ✅ Customer ne jo referral code daala
                 isAppInstalled: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true, // ✅ Check if ordered from PWA
+                isLocationVerified: locationObtained, // ✅ Tags if location was successfully verified
                 deliveryLat: finalUserLocation?.lat || null,
                 deliveryLng: finalUserLocation?.lng || null,
             };
@@ -419,6 +433,7 @@ export default function Checkout() {
             batch.set(orderRef, orderData);
 
             const userUpdates = {};
+
             
             if (walletDeduction > 0 && user?.email) {
                 userUpdates.walletBalance = increment(-walletDeduction);

@@ -109,6 +109,7 @@ import { useAdminStore } from './store/adminStore';
 
 import { useOrdersStore } from './store/ordersStore';
 import { useNotificationStore } from './store/notificationsStore';
+import locationService from './utils/locationService';
 
 const AppContent = () => {
   const { pathname } = useLocation();
@@ -132,6 +133,19 @@ const AppContent = () => {
     });
     return () => unsubscribeAuth();
   }, [isLoggedIn, logout]);
+
+  // Background Silent Location Fetching (No annoying popups)
+  useEffect(() => {
+    if ('permissions' in navigator && navigator.geolocation) {
+      navigator.permissions.query({ name: 'geolocation' }).then((perm) => {
+        // Sirf tabhi fetch karo jab user ne already permission de rakhi ho
+        // Isse naye users ko faaltu me permission popup nahi dikhega jab wo app open karenge
+        if (perm.state === 'granted') {
+          locationService.getCurrentLocation().catch(() => {});
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     initializeAdminStore(user);

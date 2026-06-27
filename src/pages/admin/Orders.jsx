@@ -508,6 +508,11 @@ export default function Orders() {
                     <p className="font-bold text-gray-900">#{o.id}</p>
                     <p className="text-xs text-gray-500">{new Date(o.placedAt).toLocaleString()}</p>
                     <p className="text-xs text-gray-500 mt-1">{o.items?.length || 0} items</p>
+                    {o.isLocationVerified === false && (
+                      <div className="mt-2 inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded-md border border-red-200">
+                        <span className="text-[10px] font-black uppercase tracking-wider">⚠️ Loc Not Verified</span>
+                      </div>
+                    )}
                     {o.couponCode && (
                       <div className="mt-2 flex items-center gap-1.5">
                         <Gift size={14} className="text-orange-500" />
@@ -629,7 +634,12 @@ export default function Orders() {
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 mb-2">Order Location</h3>
-                <div className="bg-green-50 border border-green-100 p-3 rounded-xl text-sm space-y-2">
+                {selectedOrder.isLocationVerified === false && (
+                  <div className="mb-2 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                    ⚠️ CUSTOMER BLOCKED LOCATION - VERIFY ADDRESS!
+                  </div>
+                )}
+                <div className={`${selectedOrder.isLocationVerified === false ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'} border p-3 rounded-xl text-sm space-y-2`}>
                   {getOrderLocation(selectedOrder) ? (
                     <>
                       <div className="flex items-start justify-between gap-3">
