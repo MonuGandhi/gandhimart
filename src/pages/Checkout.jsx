@@ -370,7 +370,7 @@ export default function Checkout() {
                 } else {
                     // Still have tries left — show error and block
                     if (locationError?.code === 1) {
-                        toast.error('Location permission blocked hai! Upar URL bar me (🔒) icon daba kar Allow karein.', { duration: 6000 });
+                        toast.error('Aapne location block ki hui hai. Order karne ke liye ek baar aur "Place Order" dabayein!', { duration: 6000 });
                     } else if (locationError?.code === 2) {
                         toast.error('GPS band hai! Kripya phone ki Location/GPS on karein aur dobara Order Place dabayein.', { duration: 6000 });
                     } else if (locationError?.code === 3) {
