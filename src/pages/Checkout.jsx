@@ -361,22 +361,24 @@ export default function Checkout() {
                 }
             } catch (locationError) {
                 console.error('Location validation error:', locationError);
-                locationFailCount.current += 1;
+                
+                // Sirf agar Blocked (Code 1) hai tabhi hum fail count badhayenge taaki bypass ho sake
+                if (locationError?.code === 1) {
+                    locationFailCount.current += 1;
+                }
 
-                if (locationFailCount.current >= MAX_LOCATION_TRIES) {
-                    // Allow order without location — show friendly message
-                    toast('Location nahi mili, lekin order place ho jayega! 😊 Bas address sahi hona chahiye.', { icon: '✅', duration: 5000 });
+                if (locationFailCount.current >= MAX_LOCATION_TRIES && locationError?.code === 1) {
+                    // Allow order without location only for BLOCKED cases
+                    toast('Location block hai, lekin order place ho raha hai! 😊', { icon: '✅', duration: 5000 });
                     skipLocation = true;
                 } else {
-                    // Still have tries left — show error and block
+                    // Show strict errors, do not allow bypass for GPS/Network issues
                     if (locationError?.code === 1) {
                         toast.error('Aapne location block ki hui hai. Order karne ke liye ek baar aur "Place Order" dabayein!', { duration: 6000 });
                     } else if (locationError?.code === 2) {
-                        toast.error('GPS band hai! Kripya phone ki Location/GPS on karein aur dobara Order Place dabayein.', { duration: 6000 });
-                    } else if (locationError?.code === 3) {
-                        toast.error('Location milne me time lag raha hai. Apne phone ka GPS check karein aur dobara try karein.', { duration: 5000 });
+                        toast.error('GPS band hai! Kripya phone ki Location/GPS on karein aur dobara "Place Order" dabayein.', { duration: 6000 });
                     } else {
-                        toast.error('Location fetch nahi ho payi. Kripya GPS on karein aur dobara try karein! 😊', { duration: 5000 });
+                        toast.error('Location fetch nahi ho paayi! Kripya thodi khuli jagah (bahar) jayen aur dobara "Place Order" dabayein jab tak location fetch na ho.', { duration: 6000 });
                     }
                     setLoading(false);
                     return;
