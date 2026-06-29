@@ -481,7 +481,7 @@ export default function Checkout() {
 
     if (!isLoggedIn) return null; // Prevent flicker while redirecting
 
-    if (items.length === 0) {
+    if (items.length === 0 && !loading) {
         return (
             <>
                 <Layout hideBottomNav>
