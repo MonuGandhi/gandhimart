@@ -119,7 +119,7 @@ export default function Checkout() {
                     try { locModalResolver.current && locModalResolver.current(false); } catch (e) {}
                     resolve(false);
                 },
-                { timeout: 10000 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
             );
         });
     };
