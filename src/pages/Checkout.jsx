@@ -59,6 +59,7 @@ export default function Checkout() {
     const [appliedReferral, setAppliedReferral] = useState(null); // { code, referrerName }
     const [showLocationModal, setShowLocationModal] = useState(false);
     const [locationPermissionState, setLocationPermissionState] = useState('unknown');
+    const [fetchingLocation, setFetchingLocation] = useState(false);
     const locModalResolver = useRef(null);
     const locationFailCount = useRef(0);
 
@@ -99,9 +100,12 @@ export default function Checkout() {
             return false;
         }
 
+        setFetchingLocation(true);
+
         return new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition(
                 () => {
+                    setFetchingLocation(false);
                     setLocationPermissionState('granted');
                     setShowLocationModal(false);
                     toast.success(fromBanner ? 'Current location enabled! ✅' : 'Location enabled! ✅');
@@ -109,6 +113,7 @@ export default function Checkout() {
                     resolve(true);
                 },
                 (error) => {
+                    setFetchingLocation(false);
                     refreshLocationPermission();
                     setShowLocationModal(false);
                     if (error?.code === error.PERMISSION_DENIED) {
@@ -489,7 +494,7 @@ export default function Checkout() {
                         </button>
                     </div>
                 </Layout>
-                <LocationPermissionModal open={showLocationModal} onAllow={handleModalAllow} onCancel={handleModalCancel} />
+                <LocationPermissionModal open={showLocationModal} onAllow={handleModalAllow} onCancel={handleModalCancel} loading={fetchingLocation} />
             </>
         );
     }
@@ -514,11 +519,21 @@ export default function Checkout() {
                             <p className="text-sm text-gray-700 dark:text-gray-400 font-medium leading-relaxed">
                                 Order place karne ke liye current location ON hona zaroori hai. Jab aap <span className="font-black text-gray-800 dark:text-gray-200">Place Order</span> dabayenge, tab browser location allow karne ka popup aayega.
                             </p>
-                            <button
+                             <button
                                 onClick={openLocationPrompt}
-                                className="mt-3 inline-flex items-center gap-2 bg-[#1CA672] text-white font-black px-4 py-2.5 rounded-2xl text-sm active:scale-95 transition-transform shadow-lg shadow-green-500/20"
+                                disabled={fetchingLocation}
+                                className="mt-3 inline-flex items-center gap-2 bg-[#1CA672] text-white font-black px-4 py-2.5 rounded-2xl text-sm active:scale-95 transition-transform shadow-lg shadow-green-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                <MapPin size={16} /> Allow Current Location
+                                {fetchingLocation ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Location fetch ho rahi hai...
+                                    </>
+                                ) : (
+                                    <>
+                                        <MapPin size={16} /> Allow Current Location
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -890,7 +905,7 @@ export default function Checkout() {
                     </button>
                 </div>
             </div>
-            <LocationPermissionModal open={showLocationModal} onAllow={handleModalAllow} onCancel={handleModalCancel} />
+            <LocationPermissionModal open={showLocationModal} onAllow={handleModalAllow} onCancel={handleModalCancel} loading={fetchingLocation} />
         </Layout>
     );
 }
