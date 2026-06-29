@@ -203,7 +203,7 @@ const AppContent = () => {
         }
       });
     }
-  }, [user?.email, user?.role, user?.uid, user?.phone, user?.name, isAdminLoggedIn, initOrdersFirebase, initAuthFirebase]);
+  }, [user?.email, user?.role, user?.uid, isAdminLoggedIn, initOrdersFirebase, initAuthFirebase]);
 
   const isStoreOpen = useAdminStore((state) => state.storeSettings?.isStoreOpen ?? true);
   const isSettingsLoaded = useAdminStore((state) => state.isSettingsLoaded);
