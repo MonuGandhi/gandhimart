@@ -87,14 +87,30 @@ export default function Profile() {
         if (!result?.user) return;
 
         const googleUser = result.user;
-        setTempUser({
-          name: '',
-          email: googleUser.email,
-          photoURL: googleUser.photoURL,
-          uid: googleUser.uid,
-        });
-        setNeedsPhone(true);
-        toast.success(`Welcome ${googleUser.displayName || 'Customer'}!`);
+        const emailKey = googleUser.email.toLowerCase();
+
+        // Check if user already exists in Firestore
+        const userSnap = await getDoc(doc(db, 'users', emailKey));
+        if (userSnap.exists()) {
+          // Returning user — log in directly with saved data, no form needed
+          const savedData = userSnap.data();
+          login(savedData.name, savedData.phone, savedData.email || emailKey, savedData.photoURL || googleUser.photoURL, savedData.uid || googleUser.uid);
+          // Update UID + lastLogin silently if missing
+          if (!savedData.uid && googleUser.uid) {
+            updateDoc(doc(db, 'users', emailKey), { uid: googleUser.uid, lastLogin: new Date().toISOString() }).catch(() => {});
+          }
+          toast.success(`Welcome back, ${savedData.name || 'Customer'}! 👋`);
+        } else {
+          // New user — show registration form
+          setTempUser({
+            name: '',
+            email: googleUser.email,
+            photoURL: googleUser.photoURL,
+            uid: googleUser.uid,
+          });
+          setNeedsPhone(true);
+          toast.success(`Welcome ${googleUser.displayName || 'Customer'}!`);
+        }
       } catch (error) {
         console.error('Redirect sign-in error:', error);
         if (error?.code) {
@@ -233,15 +249,33 @@ export default function Profile() {
     try {
       const result = await signInWithPopup(auth, provider);
       const googleUser = result.user;
-      
-      setTempUser({
-        name: '',
-        email: googleUser.email,
-        photoURL: googleUser.photoURL,
-        uid: googleUser.uid,
-      });
-      setNeedsPhone(true);
-      toast.success(`Welcome ${googleUser.displayName || 'Customer'}!`);
+      const emailKey = googleUser.email.toLowerCase();
+
+      // Check if user already exists in Firestore
+      const userSnap = await getDoc(doc(db, 'users', emailKey));
+      if (userSnap.exists()) {
+        // Returning user — log in directly with saved data, no form needed
+        const savedData = userSnap.data();
+        login(savedData.name, savedData.phone, savedData.email || emailKey, savedData.photoURL || googleUser.photoURL, savedData.uid || googleUser.uid);
+        // Update lastLogin + UID silently
+        try {
+          await updateDoc(doc(db, 'users', emailKey), {
+            lastLogin: new Date().toISOString(),
+            ...(savedData.uid ? {} : { uid: googleUser.uid })
+          });
+        } catch (_) { /* non-critical */ }
+        toast.success(`Welcome back, ${savedData.name || 'Customer'}! 👋`);
+      } else {
+        // New user — show registration form
+        setTempUser({
+          name: '',
+          email: googleUser.email,
+          photoURL: googleUser.photoURL,
+          uid: googleUser.uid,
+        });
+        setNeedsPhone(true);
+        toast.success(`Welcome ${googleUser.displayName || 'Customer'}!`);
+      }
     } catch (error) {
       console.error("Sign-in error details:", error);
       if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {

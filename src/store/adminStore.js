@@ -604,14 +604,20 @@ export const useAdminStore = create(
               lastLogin: serverTimestamp()
             });
           } else {
-            // Existing user
+            // Existing user — only update fields that are actually provided
             const existingData = userSnap.data();
             const updates = {
-              name: userData.name,
-              phone: userData.phone,
               email: currentEmail,
               lastLogin: serverTimestamp()
             };
+
+            // Only overwrite name/phone if new values are non-empty strings
+            if (userData.name && userData.name.trim()) {
+              updates.name = userData.name.trim();
+            }
+            if (userData.phone && userData.phone.trim()) {
+              updates.phone = userData.phone.trim();
+            }
 
             // Critical: Ensure valid UID is stored/updated
             if (userData.uid) {
