@@ -26,7 +26,13 @@ export const useOrdersStore = create(
       _unsubscribe: null,
 
       initFirebase: (userEmail = null, isAdmin = false) => {
-        const { _unsubscribe } = get();
+        const { _unsubscribe, _currentEmail, _currentRole } = get();
+
+        // ✅ Skip re-init if same user/role is already being listened to
+        if (_unsubscribe && _currentEmail === (userEmail || null) && _currentRole === isAdmin) {
+          return;
+        }
+
         if (_unsubscribe) {
           _unsubscribe();
         }
@@ -42,7 +48,7 @@ export const useOrdersStore = create(
           // Customer: View only their own orders
           q = query(collection(db, 'orders'), where('customerEmail', '==', userEmail.toLowerCase()));
         } else {
-          set({ orders: [] });
+          set({ orders: [], _currentEmail: null, _currentRole: null });
           return;
         }
 
@@ -57,7 +63,7 @@ export const useOrdersStore = create(
           set({ orders: [] });
         });
 
-        set({ _unsubscribe: unsubscribe });
+        set({ _unsubscribe: unsubscribe, _currentEmail: userEmail || null, _currentRole: isAdmin });
       },
 
       placeOrder: async (orderData) => {
