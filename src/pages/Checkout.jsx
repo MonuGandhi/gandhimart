@@ -439,6 +439,50 @@ export default function Checkout() {
             // Add order to batch
             batch.set(orderRef, orderData);
 
+            // Decrement stock for each ordered item
+            if (orderData.items && Array.isArray(orderData.items)) {
+                orderData.items.forEach(item => {
+                    const qty = item.qty || item.quantity || 1;
+                    const currentProduct = adminProducts.find(p => String(p.id) === String(item.id));
+                    if (!currentProduct) return;
+
+                    const updateData = {};
+
+                    if (item.variantId && currentProduct.variants && Array.isArray(currentProduct.variants)) {
+                        const updatedVariants = currentProduct.variants.map(v => {
+                            if (String(v.id) === String(item.variantId)) {
+                                const hasVariantStock = v.stock !== undefined && v.stock !== null && v.stock !== '';
+                                if (hasVariantStock) {
+                                    const variantStock = Math.max(0, Number(v.stock) - qty);
+                                    return {
+                                        ...v,
+                                        stock: variantStock,
+                                        inStock: variantStock > 0 ? (v.inStock !== false) : false
+                                    };
+                                }
+                            }
+                            return v;
+                        });
+                        updateData.variants = updatedVariants;
+                    }
+
+                    const currentStock = currentProduct.stock;
+                    const hasStockValue = currentStock !== undefined && currentStock !== null && currentStock !== '';
+                    if (hasStockValue) {
+                        const newStock = Math.max(0, Number(currentStock) - qty);
+                        updateData.stock = newStock;
+                        if (newStock <= 0) {
+                            updateData.inStock = false;
+                        }
+                    }
+
+                    if (Object.keys(updateData).length > 0) {
+                        const productRef = doc(db, 'products', item.id.toString());
+                        batch.update(productRef, updateData);
+                    }
+                });
+            }
+
             const userUpdates = {};
 
             
