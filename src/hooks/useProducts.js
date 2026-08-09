@@ -6,7 +6,6 @@ export const useProducts = () => {
   const categories = allCategories.filter(c => c.isActive !== false);
 
   const activeProducts = products.filter(p => {
-    if (p.inStock !== true) return false;
     const cat = allCategories.find(c => String(c.id) === String(p.categoryId));
     if (cat && cat.isActive === false) return false;
     return true;
