@@ -48,13 +48,11 @@ service cloud.firestore {
          (request.resource.data.reviewCount == resource.data.get('reviewCount', 0) + 1 ||
           request.resource.data.reviewCount == resource.data.get('reviewCount', 0) - 1 ||
           request.resource.data.reviewCount == resource.data.get('reviewCount', 0))) ||
-        // Allow customers to update stock and/or inStock (for order placement)
+        // Allow customers to update stock, inStock, and variants (for order placement)
         (currentUserEmail() != "" &&
-         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) ||
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['inStock']) ||
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'inStock'])) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'inStock', 'variants']) &&
          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['stock']) ||
-          (request.resource.data.stock < resource.data.get('stock', 0) && request.resource.data.stock >= 0)));
+          (request.resource.data.stock >= 0)));
     }
 
     match /{path=**}/reviews/{reviewId} {
