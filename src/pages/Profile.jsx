@@ -266,31 +266,30 @@ export default function Profile() {
       let googleUser = null;
       
       if (Capacitor.isNativePlatform()) {
-        try {
-          await GoogleAuth.initialize({
-            clientId: '284468125350-hj8jdfc3ogi1of2f3e2vkbh8n4jmmifb.apps.googleusercontent.com',
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true,
-          });
-          const googleResponse = await GoogleAuth.signIn();
-          const idToken = googleResponse?.authentication?.idToken || googleResponse?.idToken;
-          if (idToken) {
-            const credential = GoogleAuthProvider.credential(idToken);
-            const result = await signInWithCredential(auth, credential);
-            googleUser = result.user;
-          } else {
-            console.warn("Native GoogleAuth returned no idToken, falling back to popup");
-            const result = await signInWithPopup(auth, provider);
-            googleUser = result.user;
-          }
-        } catch (nativeError) {
-          console.error("Native GoogleAuth error, trying web popup fallback:", nativeError);
-          // Fallback to web popup authentication so app never crashes
-          const result = await signInWithPopup(auth, provider);
-          googleUser = result.user;
+        // NATIVE ANDROID: Only use GoogleAuth plugin + signInWithCredential
+        // NEVER use signInWithPopup on native - WebView cannot handle OAuth popups
+        await GoogleAuth.initialize({
+          clientId: '284468125350-hj8jdfc3ogi1of2f3e2vkbh8n4jmmifb.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true,
+        });
+        const googleResponse = await GoogleAuth.signIn();
+        
+        // Extract idToken from response (different versions return differently)
+        const idToken = googleResponse?.authentication?.idToken 
+          || googleResponse?.idToken
+          || googleResponse?.serverAuthCode;
+          
+        if (!idToken) {
+          throw new Error('Google Sign-In did not return an ID token. Please try again.');
         }
+        
+        const credential = GoogleAuthProvider.credential(idToken);
+        const result = await signInWithCredential(auth, credential);
+        googleUser = result.user;
+        
       } else {
-        // Use Web Popup Auth
+        // WEB ONLY: Use popup
         const result = await signInWithPopup(auth, provider);
         googleUser = result.user;
       }
@@ -329,15 +328,18 @@ export default function Profile() {
     } catch (error) {
       console.error("Sign-in error details:", error);
       if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
-        toast.error('Popup blocked! Please look at your address bar and allow popups to sign in.', { duration: 5000 });
+        toast.error('Popup blocked! Please allow popups to sign in.', { duration: 5000 });
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        toast.error('Sign-in was cancelled. Please try again.', { duration: 4000 });
       } else if (error.code === 'auth/unauthorized-domain') {
-        toast.error('Domain not authorized in Firebase Console! Please check Step 1.');
+        toast.error('Domain not authorized in Firebase Console!');
       } else {
         toast.error(`Sign-In Error: ${error.message || 'Authentication failed'}`);
       }
     }
     setLoading(false);
   };
+
 
   const handleSavePhone = (e) => {
     e.preventDefault();
