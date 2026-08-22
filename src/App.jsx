@@ -139,13 +139,33 @@ const AppContent = () => {
     if ('permissions' in navigator && navigator.geolocation) {
       navigator.permissions.query({ name: 'geolocation' }).then((perm) => {
         // Sirf tabhi fetch karo jab user ne already permission de rakhi ho
-        // Isse naye users ko faaltu me permission popup nahi dikhega jab wo app open karenge
         if (perm.state === 'granted') {
           locationService.getCurrentLocation().catch(() => {});
         }
       });
     }
   }, []);
+
+  // Hardware Back Button Logic for Android/Capacitor
+  useEffect(() => {
+    import('@capacitor/core').then((capacitorMod) => {
+      const { Capacitor } = capacitorMod;
+      if (Capacitor.isNativePlatform()) {
+        import('@capacitor/app').then(({ App }) => {
+          App.addListener('backButton', ({ canGoBack }) => {
+            if (pathname === '/' || pathname === '/login' || pathname === '/admin/dashboard') {
+              // On main pages, exit the app
+              App.exitApp();
+            } else {
+              // Otherwise just go back based on web history
+              window.history.back();
+            }
+          });
+        });
+      }
+    }).catch(e => console.warn('Capacitor App module not found:', e));
+  }, [pathname]);
+
 
   useEffect(() => {
     initializeAdminStore(user);
