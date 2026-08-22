@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "284468125350",
+    "project_id": "g-mart-live-b07a0",
+    "storage_bucket": "g-mart-live-b07a0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:284468125350:android:93ce21c7d02674c491de67",
+        "android_client_info": {
+          "package_name": "app.vercel.gandhimart_c9e7.twa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "284468125350-d3ls5msi5vo484q3uai262od94g8ppb9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.vercel.gandhimart_c9e7.twa",
+            "certificate_hash": "57cffacba1888c5386afd7509e02ecb51466fb8d"
+          }
+        },
+        {
+          "client_id": "284468125350-hj8jdfc3ogi1of2f3e2vkbh8n4jmmifb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjsGwnpPNT7rzs9Sgt5SzIvc7_SM_HNM8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "284468125350-hj8jdfc3ogi1of2f3e2vkbh8n4jmmifb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
