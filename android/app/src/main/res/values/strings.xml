@@ -4,4 +4,5 @@
     <string name="title_activity_main">G Mart</string>
     <string name="package_name">app.vercel.gandhimart_c9e7.twa</string>
     <string name="custom_url_scheme">app.vercel.gandhimart_c9e7.twa</string>
+    <string name="server_client_id">284468125350-hj8jdfc3ogi1of2f3e2vkbh8n4jmmifb.apps.googleusercontent.com</string>
 </resources>
