@@ -13,8 +13,10 @@ import { useNotificationStore } from '../store/notificationsStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import toast from 'react-hot-toast';
 import { auth, db } from '../firebase';
-import { GoogleAuthProvider, getRedirectResult, signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { GoogleAuthProvider, getRedirectResult, signInWithPopup, signInWithRedirect, signInWithCredential } from "firebase/auth";
 import { collection, query, orderBy, getDocs, getDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // ── Bottom Sheet Modal Wrapper ──────────────────────────────────────────────
 function BottomSheet({ open, onClose, children }) {
@@ -242,13 +244,61 @@ export default function Profile() {
     ? `GM${user.name.slice(0, 3).toUpperCase()}${user.phone.slice(-3)}`
     : '';
 
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        GoogleAuth.initialize({
+          clientId: '284468125350-hj8jdfc3ogi1of2f3e2vkbh8n4jmmifb.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true,
+        });
+      } catch (e) {
+        console.warn('GoogleAuth init error:', e);
+      }
+    }
+  }, []);
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
-      const result = await signInWithPopup(auth, provider);
-      const googleUser = result.user;
+      let googleUser = null;
+      
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await GoogleAuth.initialize({
+            clientId: '284468125350-hj8jdfc3ogi1of2f3e2vkbh8n4jmmifb.apps.googleusercontent.com',
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: true,
+          });
+          const googleResponse = await GoogleAuth.signIn();
+          const idToken = googleResponse?.authentication?.idToken || googleResponse?.idToken;
+          if (idToken) {
+            const credential = GoogleAuthProvider.credential(idToken);
+            const result = await signInWithCredential(auth, credential);
+            googleUser = result.user;
+          } else {
+            console.warn("Native GoogleAuth returned no idToken, falling back to popup");
+            const result = await signInWithPopup(auth, provider);
+            googleUser = result.user;
+          }
+        } catch (nativeError) {
+          console.error("Native GoogleAuth error, trying web popup fallback:", nativeError);
+          // Fallback to web popup authentication so app never crashes
+          const result = await signInWithPopup(auth, provider);
+          googleUser = result.user;
+        }
+      } else {
+        // Use Web Popup Auth
+        const result = await signInWithPopup(auth, provider);
+        googleUser = result.user;
+      }
+      
+      if (!googleUser) {
+        throw new Error("Could not retrieve Google User details. Please try again.");
+      }
+
       const emailKey = googleUser.email.toLowerCase();
 
       // Check if user already exists in Firestore
@@ -283,7 +333,7 @@ export default function Profile() {
       } else if (error.code === 'auth/unauthorized-domain') {
         toast.error('Domain not authorized in Firebase Console! Please check Step 1.');
       } else {
-        toast.error(`Sign-In Error: ${error.message}`);
+        toast.error(`Sign-In Error: ${error.message || 'Authentication failed'}`);
       }
     }
     setLoading(false);

@@ -1,21 +1,23 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Preserve line number information for debugging stack traces
+-keepattributes SourceFile,LineNumberTable,Signature,InnerClasses,EnclosingMethod,*Annotation*
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Capacitor Core Keep Rules
+-keep class com.getcapacitor.** { *; }
+-keep class * extends com.getcapacitor.Plugin { *; }
+-keep class * extends com.getcapacitor.BridgeActivity { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
--keepattributes SourceFile,LineNumberTable
+# Codetrix Studio Capacitor Google Auth Keep Rules
+-keep class com.codetrixstudio.capacitor.** { *; }
+-keep class com.codetrixstudio.capacitor.GoogleAuth { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Google Play Services & Auth Keep Rules
+-keep class com.google.android.gms.auth.api.signin.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.google.android.gms.tasks.** { *; }
+-keep class com.google.android.gms.identity.** { *; }
+
+# Firebase Auth & Firestore Keep Rules
+-keep class com.google.firebase.** { *; }
+-keep class androidx.credentials.** { *; }
+-keep class androidx.credentials.playservices.** { *; }
+
